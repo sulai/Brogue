@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="brogue" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="..\brogue" prefix_auto="1" extension_auto="1" />
+				<Option working_dir=".." />
+				<Option object_output="obj\Release\" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-march=i586" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O2" />
+					<Add option="-DBROGUE_TCOD" />
+					<Add directory="BrogueCode" />
+					<Add directory="PlatformCode" />
+					<Add directory="libtcod-1.5.1\include" />
+					<Add directory="SDL-1.2.14\include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="libtcod-1.5.1\lib\libtcod-mingw.a" />
+					<Add library="SDL-1.2.14\lib\libSDL.dll.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="BrogueCode\Architect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Buttons.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Combat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Dijkstra.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Globals.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Grid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\IO.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\IncludeGlobals.h" />
+		<Unit filename="BrogueCode\Items.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Light.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\MainMenu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Monsters.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Movement.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Random.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Recordings.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BrogueCode\Rogue.h" />
+		<Unit filename="BrogueCode\RogueMain.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="PlatformCode\PlatformDefines.h" />
+		<Unit filename="PlatformCode\main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="PlatformCode\platform.h" />
+		<Unit filename="PlatformCode\platformdependent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="PlatformCode\tcod-platform.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="icon.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
