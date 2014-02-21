@@ -3,3 +3,12 @@ bin/linux/libtcod.so
 bin/windows/SDL.dll
 bin/windows/libtcod-mingw.dll
 src/libtcod-1.5.2
+*.tar.gz
+*.o
+bin/*/fonts
+bin/*/Brogue seed catalog.txt
+bin/*/BrogueHighScores.txt
+bin/*/Readme.rtf
+bin/*/brogue
+bin/*/license-agpl.txt
+

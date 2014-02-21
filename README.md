@@ -1,7 +1,7 @@
 Brogue
 ======
 
-This is a fork of Brian Walker's "Brogue", a wonderful tactic and adventure game. It belongs to the roguelike genre and as such features perma death.
+This is a fork of Brian Walker's "Brogue", a wonderful roguelike game.
 
 
 Description of the folder layout
