@@ -13,4 +13,5 @@ bin/*/brogue
 bin/*/license-agpl.txt
 bin/windows/brogue.exe
 src/SDL-1.2.14/
-
+*.broguerec
+*.broguesave

@@ -2236,6 +2236,7 @@ itemTable charmTable[NUMBER_CHARM_KINDS] = {
     {"teleportation",   "", "",	1,	700,	0,{1,2,1}, true, false, "The surface of this nickel sphere has been etched with a perfect grid pattern. Somehow, the squares of the grid are all exactly the same size."},
     {"recharging",      "", "",	1,	700,	0,{1,2,1}, true, false, "A strip of bronze has been wound around a rough wooden sphere. Each time you touch it, you feel a tiny electric shock."},
     {"negation",        "", "",	1,	700,	0,{1,2,1}, true, false, "A featureless gray disc hangs from a leather lanyard. When you touch it, your hand briefly goes numb."},
+    {"communication",   "", "",	1,	700,	0,{1,2,1}, true, false, "This flask is constantly filling with magical gas. Taking a breath of it, the sound of your words get strangely distorted."},
 };
 
 #pragma mark Feat definitions
