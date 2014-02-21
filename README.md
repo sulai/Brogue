@@ -13,7 +13,7 @@ The build scripts for each platform can be found in **build**. They work on sour
 Description of the branches
 ===========================
 
-The **original_brogue** branch reflects brogue as it is released officialy by Brian Walker. Source files and resources have exactly the same state, while build scripts are adapted to the unified folder structure.
+The **master** branch (**original_brogue**) reflects brogue as it is released officialy by Brian Walker. Source files and resources have exactly the same state, while build scripts are adapted to the unified folder structure.
 
 There are some **feature** branches, each of which contains a single feature separately. This makes it easy to exchange features between repositories.
 
