@@ -2326,7 +2326,7 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 			break;
 		case 'f': // follow me! (short leash)
 			communicateNearbyAllies(100, STATUS_ALLY_FOLLOW, 0, 100);
-			recordKeystroke('F', false, true);
+			recordKeystroke('f', false, true);
 			playerTurnEnded();
 			break;
 		case 'g': // stand guard!
@@ -3930,9 +3930,6 @@ short printMonsterInfo(creature *monst, short y, boolean dim, boolean highlight)
         "Invisible",
         "Following",
         "Guarding",
-        "Fleeing",
-        "Pausing",
-        "Attacking",
 	};
 	
 	if (y >= ROWS - 1) {
@@ -4496,72 +4493,6 @@ unsigned long printCarriedItemDetails(item *theItem,
 		return -1;
 	}
 	
-	if (b >= 0) {
-		return buttons[b].hotkey[0];
-	} else {
-		return -1;
-	}
-}
-
-// Displays the item info box with the dark blue background.
-// If includeButtons is true, we include buttons for item actions.
-// Returns the key of an action to take, if any; otherwise -1.
-unsigned long printCommandDialog(item *theItem,
-									  short x, short y, short width, short enchant) {
-	char textBuf[COLS * 100], goldColorEscape[5] = "", whiteColorEscape[5] = "";
-	brogueButton buttons[20] = {{{0}}};
-	short b;
-
-	cellDisplayBuffer rbuf[COLS][ROWS];
-
-	strcpy(textBuf, "Command your allies:");
-
-	for (b=0; b<20; b++) {
-		initializeButton(&(buttons[b]));
-		buttons[b].flags |= B_WIDE_CLICK_AREA;
-	}
-
-	b = 0;
-
-	encodeMessageColor(goldColorEscape, 0, KEYBOARD_LABELS ? &yellow : &white);
-	encodeMessageColor(whiteColorEscape, 0, &white);
-
-	sprintf(buttons[b].text, "       %st%shanks!      ", goldColorEscape, whiteColorEscape);
-	buttons[b].hotkey[0] = 't';
-	b++;
-
-	sprintf(buttons[b].text, "   stand %sg%suard!     ", goldColorEscape, whiteColorEscape);
-	buttons[b].hotkey[0] = 'g';
-	b++;
-
-	if(enchant>=2) {
-		sprintf(buttons[b].text, "     %sf%sollow me!     ", goldColorEscape, whiteColorEscape);
-		buttons[b].hotkey[0] = 'f';
-		b++;
-	}
-
-	if(enchant>=3) {
-		sprintf(buttons[b].text, "        %sr%sun!        ", goldColorEscape, whiteColorEscape);
-		buttons[b].hotkey[0] = 'r';
-		b++;
-	}
-
-	if(enchant>=4) {
-		sprintf(buttons[b].text, "      %sa%sttack!       ", goldColorEscape, whiteColorEscape);
-		buttons[b].hotkey[0] = 'a';
-		b++;
-	}
-
-	if(enchant>=5) {
-		sprintf(buttons[b].text, "      %sp%sause!        ", goldColorEscape, whiteColorEscape);
-		buttons[b].hotkey[0] = 'p';
-		b++;
-	}
-
-	b = printTextBox(textBuf, x, y, width, &white, &interfaceBoxColor, rbuf, buttons, b);
-
-	overlayDisplayBuffer(rbuf, NULL); // remove the window
-
 	if (b >= 0) {
 		return buttons[b].hotkey[0];
 	} else {

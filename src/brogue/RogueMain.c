@@ -413,16 +413,7 @@ void initializeRogue(unsigned long seed) {
 	
 	theItem = generateItem(FOOD, RATION);
 	theItem = addItemToPack(theItem);
-
-	theItem = generateItem(STAFF, STAFF_CONJURATION);
-	theItem = addItemToPack(theItem);
-
-	theItem = generateItem(CHARM, CHARM_GUARDIAN);
-	theItem = addItemToPack(theItem);
-
-	theItem = generateItem(CHARM, CHARM_COMMUNICATION);
-	theItem = addItemToPack(theItem);
-
+	
 	theItem = generateItem(WEAPON, DAGGER);
 	theItem->enchant1 = theItem->enchant2 = 0;
 	theItem->flags &= ~(ITEM_CURSED | ITEM_RUNIC);

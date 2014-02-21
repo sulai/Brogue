@@ -812,7 +812,6 @@ enum charmKind {
     CHARM_TELEPORTATION,
     CHARM_RECHARGING,
     CHARM_NEGATION,
-    CHARM_COMMUNICATION,
     NUMBER_CHARM_KINDS
 };
 
@@ -1155,8 +1154,6 @@ boolean cellHasTerrainFlag(short x, short y, unsigned long flagMask);
 #define turnsForFullRegen(bonus)			((long) (1000 * TURNS_FOR_FULL_REGEN * pow(0.75, (bonus)) + 2000 + FLOAT_FUDGE))
 											// This will max out at full regeneration in about two turns.
 											// This is the Syd nerf, after Syd broke the game over his knee with a +18 ring of regeneration.
-
-#define turnsAllyForgetCommand(enchant)    ((int) (200 * pow(1.35, (double) (enchant) - 1) + FLOAT_FUDGE))
 
 // structs
 
@@ -1714,9 +1711,6 @@ enum statusEffects {
     STATUS_INVISIBLE,
     STATUS_ALLY_FOLLOW,
     STATUS_ALLY_GUARDING,
-    STATUS_ALLY_RUN,
-    STATUS_ALLY_PAUSE,
-    STATUS_ALLY_ATTACK,
 	NUMBER_OF_STATUS_EFFECTS,
 };
 

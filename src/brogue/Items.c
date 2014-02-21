@@ -697,7 +697,7 @@ void pickUpItemAt(short x, short y) {
 		message("Error: Expected item; item not found.", true);
 		return;
 	}
-
+	
 	if ((theItem->flags & ITEM_KIND_AUTO_ID)
         && tableForItemCategory(theItem->category)
 		&& !(tableForItemCategory(theItem->category)[theItem->kind].identified)) {
@@ -1451,7 +1451,6 @@ short charmRechargeDelay(short charmKind, short enchant) {
         1000,   // Teleportation
         10000,  // Recharging
         2500,   // Negation
-        300,    // Communication
     };
     const short increment[NUMBER_CHARM_KINDS] = {
         45, // Health
@@ -1466,7 +1465,6 @@ short charmRechargeDelay(short charmKind, short enchant) {
         45, // Teleportation
         40, // Recharging
         40, // Negation
-        45, // Communication
     };
     
     return charmEffectDuration(charmKind, enchant) + duration[charmKind] * (pow((double) (100 - (increment[charmKind])) / 100, enchant) + FLOAT_FUDGE);
@@ -2322,11 +2320,6 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
                             charmNegationRadius(theItem->enchant1 + 1),
                             charmRechargeDelay(theItem->kind, theItem->enchant1 + 1));
                     break;
-                case CHARM_COMMUNICATION:
-                    sprintf(buf2, "\n\nWhen used, the charm will allow you to command your allies. It will recharge itself in %i turns. (If the charm is enchanted, it will recharge in %i turns.)",
-                            charmRechargeDelay(theItem->kind, theItem->enchant1),
-                            charmRechargeDelay(theItem->kind, theItem->enchant1 + 1));
-                    break;
                 default:
                     break;
             }
@@ -2621,7 +2614,7 @@ char displayInventory(unsigned short categoryMask,
 		
 		// Was an item selected?
 		if (highlightItemLine > -1 && (waitForAcknowledge || theEvent.shiftKey || theEvent.controlKey)) {
-
+			
 			do {
 				// Yes. Highlight the selected item. Do this by changing the button color and re-displaying it.
 				
@@ -3540,13 +3533,10 @@ short communicateNearbyAllies(const short distance, int allyStatus, short turns,
 
         		monst->status[STATUS_ALLY_FOLLOW] = 0;
 				monst->status[STATUS_ALLY_GUARDING] = 0;
-				monst->status[STATUS_ALLY_RUN] = 0;
-				monst->status[STATUS_ALLY_ATTACK] = 0;
-				monst->status[STATUS_ALLY_PAUSE] = 0;
 
 				if(allyStatus!=0) {
         			unsigned long friendBonus = 0;
-        			if(div>0) friendBonus = (rogue.absoluteTurnNumber - monst->absoluteTurnFreed) / div + 2;
+        			if(div>0) friendBonus = (rogue.absoluteTurnNumber - monst->absoluteTurnFreed) / div + 1;
         			monst->status[allyStatus] = monst->maxStatus[allyStatus] = friendBonus + turns;
         		}
 
@@ -3573,12 +3563,8 @@ short communicateNearbyAllies(const short distance, int allyStatus, short turns,
 	else strcpy(msg, "Your roaring voice echoes from the depths of the dungeon!");
 
 	if(maxAllyDistance>0) {
-		if(allyStatus==0)                     strcat(msg, " Follow me!");
-		if(allyStatus==STATUS_ALLY_FOLLOW)    strcat(msg, " Follow me - stay close!");
+		if(allyStatus==STATUS_ALLY_FOLLOW)    strcat(msg, " Follow me!");
 		if(allyStatus==STATUS_ALLY_GUARDING)  strcat(msg, " Stand guard!");
-		if(allyStatus==STATUS_ALLY_RUN)       strcat(msg, " Run!");
-		if(allyStatus==STATUS_ALLY_ATTACK)    strcat(msg, " Attack!");
-		if(allyStatus==STATUS_ALLY_PAUSE)     strcat(msg, " Pause!");
 	}
 
     messageWithColor(msg, &itemMessageColor, false);
@@ -5397,7 +5383,7 @@ void throwCommand(item *theItem) {
 		itemName(thrownItem, theName, false, false, NULL);
 		originLoc[0] = player.xLoc;
 		originLoc[1] = player.yLoc;
-
+		
 		throwItem(thrownItem, &player, zapTarget, maxDistance);
 	} else {
 		return;
@@ -5579,19 +5565,6 @@ void useCharm(item *theItem) {
         case CHARM_NEGATION:
             negationBlast("your charm", charmNegationRadius(theItem->enchant1) + 1); // Add 1 because otherwise radius 1 would affect only the player.
             break;
-        case CHARM_COMMUNICATION:
-        	messageWithColor("You take a deep breath of the magical gas!", &itemMessageColor, false);
-        	short actionKey = printCommandDialog(theItem,  max(2, mapToWindowX(DCOLS - 30 - 42)), mapToWindowY(2), 30, theItem->enchant1);
-        	short allyStatus = 0;
-        	if(actionKey=='t')       allyStatus = 0;
-        	else if(actionKey=='f') allyStatus = STATUS_ALLY_FOLLOW;
-        	else if(actionKey=='g') allyStatus = STATUS_ALLY_GUARDING;
-        	else if(actionKey=='r') allyStatus = STATUS_ALLY_RUN;
-        	else if(actionKey=='p') allyStatus = STATUS_ALLY_PAUSE;
-        	else if(actionKey=='a') allyStatus = STATUS_ALLY_ATTACK;
-        	else break;
-        	communicateNearbyAllies(100, allyStatus, turnsAllyForgetCommand(theItem->enchant1), 0);
-            break;
         default:
             break;
     }
@@ -5721,7 +5694,7 @@ void apply(item *theItem, boolean recordCommands) {
 	if (revealItemType) {
 		autoIdentify(theItem);
 	}
-
+	
 	if (theItem->category & CHARM) {
         theItem->charges = charmRechargeDelay(theItem->kind, theItem->enchant1);
     } else if (theItem->charges > 0) {
@@ -5831,7 +5804,7 @@ void readScroll(item *theItem) {
 	creature *monst;
 	boolean hadEffect = false;
 	char buf[2*COLS], buf2[COLS];
-
+    
     rogue.featRecord[FEAT_ARCHIVIST] = false;
 	
 	switch (theItem->kind) {
@@ -6401,7 +6374,7 @@ void unequip(item *theItem) {
 	if (theItem == NULL) {
 		return;
 	}
-
+	
 	command[1] = theItem->inventoryLetter;
 	command[2] = '\0';
 	

@@ -2717,7 +2717,7 @@ void moveAlly(creature *monst) {
 	}
 	
 	// Weak allies in the presence of enemies seek safety;
-	if (allyFlees(monst, closestMonster) && !monst->status[STATUS_ALLY_ATTACK] || monst->status[STATUS_ALLY_RUN]) {
+	if (allyFlees(monst, closestMonster)) {		
 		if ((monst->info.abilityFlags & MA_CAST_BLINK)
 			&& ((monst->info.flags & MONST_ALWAYS_USE_ABILITY) || rand_percent(30))
 			&& monsterBlinkToSafety(monst)) {
@@ -2750,10 +2750,6 @@ void moveAlly(creature *monst) {
 			return;
 		}
 	}
-    
-	// try to hold position
-	if(monst->status[STATUS_ALLY_PAUSE] && shortestDistance>1)
-		return;
 
     leashLength = 10;
 	if(monst->status[STATUS_ALLY_FOLLOW])
@@ -2769,8 +2765,7 @@ void moveAlly(creature *monst) {
 
 	if (closestMonster
 		&& (distance < leashLength || (monst->bookkeepingFlags & MONST_DOES_NOT_TRACK_LEADER))
-		&& !(monst->info.flags & MONST_MAINTAINS_DISTANCE)
-		|| closestMonster && monst->status[STATUS_ALLY_ATTACK]) {
+		&& !(monst->info.flags & MONST_MAINTAINS_DISTANCE)) {
 		
 		// Blink toward an enemy?
 		if ((monst->info.abilityFlags & MA_CAST_BLINK)
@@ -2798,7 +2793,7 @@ void moveAlly(creature *monst) {
 				if (target != monst
 					&& (!(target->bookkeepingFlags & MONST_SUBMERGED) || (monst->bookkeepingFlags & MONST_SUBMERGED))
 					&& monsterWillAttackTarget(monst, target)
-					&& (distanceBetween(x, y, target->xLoc, target->yLoc) < shortestDistance || monst->status[STATUS_ALLY_ATTACK])
+					&& distanceBetween(x, y, target->xLoc, target->yLoc) < shortestDistance
 					&& traversiblePathBetween(monst, target->xLoc, target->yLoc)
 					&& (!monsterAvoids(monst, target->xLoc, target->yLoc) || (target->info.flags & MONST_ATTACKABLE_THRU_WALLS))
 					&& (!target->status[STATUS_INVISIBLE] || ((monst->info.flags & MONST_ALWAYS_USE_ABILITY) || rand_percent(33)))) {
@@ -2856,7 +2851,7 @@ void moveAlly(creature *monst) {
 		dir = scentDirection(monst);
 		if (dir == -1 || (monst->bookkeepingFlags & MONST_GIVEN_UP_ON_SCENT)) {
 			monst->bookkeepingFlags |= MONST_GIVEN_UP_ON_SCENT;
-				moveTowardLeader(monst);
+			moveTowardLeader(monst);
 		} else {
 			if(!monst->status[STATUS_ALLY_GUARDING]) {
 				targetLoc[0] = x + nbDirs[dir][0];
