@@ -11,4 +11,6 @@ bin/*/BrogueHighScores.txt
 bin/*/Readme.rtf
 bin/*/brogue
 bin/*/license-agpl.txt
+bin/windows/brogue.exe
+src/SDL-1.2.14/
 

@@ -1,32 +1,44 @@
-LIBTCODDIR=libtcod-1.5.1
-SDLDIR=SDL-1.2.14
-CFLAGS=$(FLAGS) -I$(LIBTCODDIR)/include -I$(SDLDIR)/include -IBrogueCode -IPlatformCode -DBROGUE_TCOD -Wall
+SRC=..\..\src
+BIN=..\..\bin\windows
+RES=..\..\res
+LIBTCODDIR=$(SRC)\libtcod-1.5.2
+SDLDIR=$(SRC)\SDL-1.2.14
+CFLAGS=$(FLAGS) -I$(LIBTCODDIR)/include -I$(SDLDIR)/include -I$(SRC)/brogue -I$(SRC)/platform -DBROGUE_TCOD -Wall
 
 %.o : %.c
-	gcc $(CFLAGS) -O2 -s -o $@ -c $< 
+	mingw32-gcc $(CFLAGS) -O2 -s -o $@ -c $< 
 
-OBJS=BrogueCode/Architect.o \
-	BrogueCode/Combat.o \
-	BrogueCode/Dijkstra.o \
-	BrogueCode/Globals.o \
-	BrogueCode/IO.o \
-	BrogueCode/Buttons.o \
-	BrogueCode/MainMenu.o \
-	BrogueCode/Items.o \
-	BrogueCode/Light.o \
-	BrogueCode/Monsters.o \
-	BrogueCode/Movement.o \
-	BrogueCode/RogueMain.o \
-	BrogueCode/Random.o \
-	BrogueCode/Recordings.o \
-	PlatformCode/main.o \
-	PlatformCode/platformdependent.o \
-	PlatformCode/tcod-platform.o 
+OBJS=$(SRC)/brogue/Architect.o \
+	$(SRC)/brogue/Combat.o \
+	$(SRC)/brogue/Dijkstra.o \
+	$(SRC)/brogue/Globals.o \
+	$(SRC)/brogue/IO.o \
+	$(SRC)/brogue/Items.o \
+	$(SRC)/brogue/Light.o \
+	$(SRC)/brogue/Monsters.o \
+	$(SRC)/brogue/Buttons.o \
+	$(SRC)/brogue/Movement.o \
+	$(SRC)/brogue/Recordings.o \
+	$(SRC)/brogue/RogueMain.o \
+	$(SRC)/brogue/Random.o \
+	$(SRC)/brogue/MainMenu.o \
+	$(SRC)/brogue/Grid.o \
+	$(SRC)/brogue/Time.o \
+	$(SRC)/platform/main.o \
+	$(SRC)/platform/platformdependent.o \
+	$(SRC)/platform/tcod-platform.o 
 
-all : brogue
+all : brogue resources dll
+
+dll :
+	copy "$(SDLDIR)\bin\SDL.dll" "$(BIN)\"
+#	copy "$(LIBTCODDIR)\libtcod-mingw.dll" "$(BIN)\"
+
+resources :
+	xcopy "$(RES)\*" "$(BIN)\" /E /Y
 
 brogue-icon.o : brogue-icon.ico icon.rc
 	windres icon.rc brogue-icon.o
 
 brogue : ${OBJS} brogue-icon.o 
-	g++ -o brogue.exe ${OBJS} brogue-icon.o -L. -ltcod-mingw -lSDL -L$(LIBTCODDIR)/ -static-libgcc -static-libstdc++ -mwindows
+	g++ -o $(BIN)/brogue.exe ${OBJS} brogue-icon.o -L. -ltcod-mingw -lSDL -L$(LIBTCODDIR)/ -static-libgcc -static-libstdc++ -mwindows

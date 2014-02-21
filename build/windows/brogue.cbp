@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release">
-				<Option output="..\brogue" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\windows\brogue" prefix_auto="1" extension_auto="1" />
 				<Option working_dir=".." />
 				<Option object_output="obj\Release\" />
 				<Option type="0" />
@@ -17,77 +17,77 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-O2" />
 					<Add option="-DBROGUE_TCOD" />
-					<Add directory="BrogueCode" />
-					<Add directory="PlatformCode" />
-					<Add directory="libtcod-1.5.1\include" />
-					<Add directory="SDL-1.2.14\include" />
+					<Add directory="..\..\src\brogue" />
+					<Add directory="..\..\src\platform" />
+					<Add directory="..\..\src\libtcod-1.5.1\include" />
+					<Add directory="..\..\src\SDL-1.2.14\include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="libtcod-1.5.1\lib\libtcod-mingw.a" />
-					<Add library="SDL-1.2.14\lib\libSDL.dll.a" />
+					<Add library="..\..\src\libtcod-1.5.1\lib\libtcod-mingw.a" />
+					<Add library="..\..\src\SDL-1.2.14\lib\libSDL.dll.a" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="BrogueCode\Architect.c">
+		<Unit filename="..\..\src\brogue\Architect.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Buttons.c">
+		<Unit filename="..\..\src\brogue\Buttons.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Combat.c">
+		<Unit filename="..\..\src\brogue\Combat.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Dijkstra.c">
+		<Unit filename="..\..\src\brogue\Dijkstra.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Globals.c">
+		<Unit filename="..\..\src\brogue\Globals.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Grid.c">
+		<Unit filename="..\..\src\brogue\Grid.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\IO.c">
+		<Unit filename="..\..\src\brogue\IO.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\IncludeGlobals.h" />
-		<Unit filename="BrogueCode\Items.c">
+		<Unit filename="..\..\src\brogue\IncludeGlobals.h" />
+		<Unit filename="..\..\src\brogue\Items.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Light.c">
+		<Unit filename="..\..\src\brogue\Light.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\MainMenu.c">
+		<Unit filename="..\..\src\brogue\MainMenu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Monsters.c">
+		<Unit filename="..\..\src\brogue\Monsters.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Movement.c">
+		<Unit filename="..\..\src\brogue\Movement.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Random.c">
+		<Unit filename="..\..\src\brogue\Random.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Recordings.c">
+		<Unit filename="..\..\src\brogue\Recordings.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="BrogueCode\Rogue.h" />
-		<Unit filename="BrogueCode\RogueMain.c">
+		<Unit filename="..\..\src\brogue\Rogue.h" />
+		<Unit filename="..\..\src\brogue\RogueMain.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="PlatformCode\PlatformDefines.h" />
-		<Unit filename="PlatformCode\main.c">
+		<Unit filename="..\..\src\platform\PlatformDefines.h" />
+		<Unit filename="..\..\src\platform\main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="PlatformCode\platform.h" />
-		<Unit filename="PlatformCode\platformdependent.c">
+		<Unit filename="..\..\src\platform\platform.h" />
+		<Unit filename="..\..\src\platform\platformdependent.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="PlatformCode\tcod-platform.c">
+		<Unit filename="..\..\src\platform\tcod-platform.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="icon.rc">
