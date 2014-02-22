@@ -1709,6 +1709,8 @@ enum statusEffects {
 	STATUS_LIFESPAN_REMAINING,
 	STATUS_SHIELDED,
     STATUS_INVISIBLE,
+    STATUS_ALLY_FOLLOW,
+    STATUS_ALLY_GUARDING,
 	NUMBER_OF_STATUS_EFFECTS,
 };
 
@@ -1974,6 +1976,12 @@ typedef struct creature {
 	struct creature *carriedMonster;	// when vampires turn into bats, one of the bats restores the vampire when it dies
 	struct creature *nextCreature;
 	struct item *carriedItem;			// only used for monsters
+
+	// ally specific
+	short xAllyCommand;
+	short yAllyCommand;
+	unsigned long absoluteTurnFreed;  // the turn this creature was made an ally
+
 } creature;
 
 enum NGCommands {

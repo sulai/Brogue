@@ -2324,6 +2324,16 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 		case AUTOPLAY_KEY:
 			autoPlayLevel(controlKey);
 			break;
+		case 'f': // follow me! (short leash)
+			communicateNearbyAllies(100, STATUS_ALLY_FOLLOW, 0, 100);
+			recordKeystroke('f', false, true);
+			playerTurnEnded();
+			break;
+		case 'g': // stand guard!
+			communicateNearbyAllies(100, STATUS_ALLY_GUARDING, 0, 10);
+			recordKeystroke('g', false, true);
+			playerTurnEnded();
+			break;
 		case MESSAGE_ARCHIVE_KEY:
 			displayMessageArchive();
 			break;
@@ -3918,6 +3928,8 @@ short printMonsterInfo(creature *monst, short y, boolean dim, boolean highlight)
 		"Lifespan",
 		"Shielded",
         "Invisible",
+        "Following",
+        "Guarding",
 	};
 	
 	if (y >= ROWS - 1) {
