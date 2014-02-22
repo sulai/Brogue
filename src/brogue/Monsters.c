@@ -2717,7 +2717,7 @@ void moveAlly(creature *monst) {
 	}
 	
 	// Weak allies in the presence of enemies seek safety;
-	if (allyFlees(monst, closestMonster)) {		
+	if (allyFlees(monst, closestMonster) && !monst->status[STATUS_ALLY_ATTACK] || monst->status[STATUS_ALLY_RUN]) {
 		if ((monst->info.abilityFlags & MA_CAST_BLINK)
 			&& ((monst->info.flags & MONST_ALWAYS_USE_ABILITY) || rand_percent(30))
 			&& monsterBlinkToSafety(monst)) {
@@ -2751,15 +2751,26 @@ void moveAlly(creature *monst) {
 		}
 	}
     
-    if (shortestDistance == 1) {
-        leashLength = 11; // If the ally is adjacent to a monster at the end of its leash, it shouldn't be prevented from attacking.
-    } else {
-        leashLength = 10;
-    }
+	// try to hold position
+	if(monst->status[STATUS_ALLY_PAUSE] && shortestDistance>1)
+		return;
+
+    leashLength = 10;
+	if(monst->status[STATUS_ALLY_FOLLOW])
+		leashLength = 2;
+
+    // If the ally is adjacent to a monster at the end of its leash, it shouldn't be prevented from attacking.
+    if (shortestDistance == 1)
+    	leashLength++;
 	
+    short distance = distanceBetween(x, y, player.xLoc, player.yLoc);
+    if(monst->status[STATUS_ALLY_GUARDING])
+    	distance = distanceBetween(x, y, monst->xAllyCommand, monst->yAllyCommand);
+
 	if (closestMonster
-		&& (distanceBetween(x, y, player.xLoc, player.yLoc) < leashLength || (monst->bookkeepingFlags & MONST_DOES_NOT_TRACK_LEADER))
-		&& !(monst->info.flags & MONST_MAINTAINS_DISTANCE)) {
+		&& (distance < leashLength || (monst->bookkeepingFlags & MONST_DOES_NOT_TRACK_LEADER))
+		&& !(monst->info.flags & MONST_MAINTAINS_DISTANCE)
+		|| closestMonster && monst->status[STATUS_ALLY_ATTACK]) {
 		
 		// Blink toward an enemy?
 		if ((monst->info.abilityFlags & MA_CAST_BLINK)
@@ -2787,7 +2798,7 @@ void moveAlly(creature *monst) {
 				if (target != monst
 					&& (!(target->bookkeepingFlags & MONST_SUBMERGED) || (monst->bookkeepingFlags & MONST_SUBMERGED))
 					&& monsterWillAttackTarget(monst, target)
-					&& distanceBetween(x, y, target->xLoc, target->yLoc) < shortestDistance
+					&& (distanceBetween(x, y, target->xLoc, target->yLoc) < shortestDistance || monst->status[STATUS_ALLY_ATTACK])
 					&& traversiblePathBetween(monst, target->xLoc, target->yLoc)
 					&& (!monsterAvoids(monst, target->xLoc, target->yLoc) || (target->info.flags & MONST_ATTACKABLE_THRU_WALLS))
 					&& (!target->status[STATUS_INVISIBLE] || ((monst->info.flags & MONST_ALWAYS_USE_ABILITY) || rand_percent(33)))) {
@@ -2827,13 +2838,15 @@ void moveAlly(creature *monst) {
 			monst->bookkeepingFlags |= MONST_ABSORBING;
 		}
 	} else if ((monst->bookkeepingFlags & MONST_DOES_NOT_TRACK_LEADER)
-			   || (distanceBetween(x, y, player.xLoc, player.yLoc) < 3 && (pmap[x][y].flags & IN_FIELD_OF_VIEW))) {
+			   || (distance < 3 && (pmap[x][y].flags & IN_FIELD_OF_VIEW))
+			   || (distance < 3 && monst->status[STATUS_ALLY_GUARDING])) {
         
 		monst->bookkeepingFlags &= ~MONST_GIVEN_UP_ON_SCENT;
         monsterMillAbout(monst, 30);
 	} else {
 		if ((monst->info.abilityFlags & MA_CAST_BLINK)
 			&& !(monst->bookkeepingFlags & MONST_GIVEN_UP_ON_SCENT)
+			&& !(monst->status[STATUS_ALLY_GUARDING])
 			&& distanceBetween(x, y, player.xLoc, player.yLoc) > 10
 			&& monsterBlinkToPreferenceMap(monst, scentMap, true)) { // if he actually cast a spell
 			
@@ -2843,11 +2856,18 @@ void moveAlly(creature *monst) {
 		dir = scentDirection(monst);
 		if (dir == -1 || (monst->bookkeepingFlags & MONST_GIVEN_UP_ON_SCENT)) {
 			monst->bookkeepingFlags |= MONST_GIVEN_UP_ON_SCENT;
-			moveTowardLeader(monst);
+				moveTowardLeader(monst);
 		} else {
-			targetLoc[0] = x + nbDirs[dir][0];
-			targetLoc[1] = y + nbDirs[dir][1];
-			moveMonsterPassivelyTowards(monst, targetLoc, false);
+			if(!monst->status[STATUS_ALLY_GUARDING]) {
+				targetLoc[0] = x + nbDirs[dir][0];
+				targetLoc[1] = y + nbDirs[dir][1];
+				moveMonsterPassivelyTowards(monst, targetLoc, false);
+			}
+			else {
+				targetLoc[0] = monst->xAllyCommand;
+				targetLoc[1] = monst->yAllyCommand;
+				moveMonsterPassivelyTowards(monst, targetLoc, false);
+			}
 		}
 	}
 }

@@ -754,6 +754,7 @@ void magicWeaponHit(creature *defender, item *theItem, boolean backstabbed) {
 					newMonst->bookkeepingFlags &= ~MONST_JUST_SUMMONED;
 					newMonst->leader = &player;
 					newMonst->creatureState = MONSTER_ALLY;
+					newMonst->absoluteTurnFreed = rogue.absoluteTurnNumber;
 					if (theItem->flags & ITEM_ATTACKS_SLOWLY) {
 						newMonst->info.attackSpeed *= 2;
 					}
@@ -886,6 +887,7 @@ void applyArmorRunicEffect(char returnString[DCOLS], creature *attacker, short *
 					monst->info.abilityFlags &= ~MA_CAST_SUMMON; // No summoning by spectral images. Gotta draw the line!
 					monst->leader = &player;
 					monst->creatureState = MONSTER_ALLY;
+					monst->absoluteTurnFreed = rogue.absoluteTurnNumber;
                     monst->status[STATUS_DISCORDANT] = 0; // Otherwise things can get out of control...
 					monst->ticksUntilTurn = 100;
 					monst->info.monsterID = MK_SPECTRAL_IMAGE;
