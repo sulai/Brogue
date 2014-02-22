@@ -4526,34 +4526,32 @@ unsigned long printCommandDialog(item *theItem,
 	encodeMessageColor(goldColorEscape, 0, KEYBOARD_LABELS ? &yellow : &white);
 	encodeMessageColor(whiteColorEscape, 0, &white);
 
-	sprintf(buttons[b].text, "       %st%shanks!      ", goldColorEscape, whiteColorEscape);
-	buttons[b].hotkey[0] = 't';
-	b++;
+//	sprintf(buttons[b].text, "       %st%shanks!      ", goldColorEscape, whiteColorEscape);
+//	buttons[b].hotkey[0] = 't';
+//	b++;
 
 	sprintf(buttons[b].text, "   stand %sg%suard!     ", goldColorEscape, whiteColorEscape);
 	buttons[b].hotkey[0] = 'g';
 	b++;
 
-	if(enchant>=2) {
-		sprintf(buttons[b].text, "     %sf%sollow me!     ", goldColorEscape, whiteColorEscape);
-		buttons[b].hotkey[0] = 'f';
-		b++;
-	}
+	sprintf(buttons[b].text, "     %sf%sollow me!     ", goldColorEscape, whiteColorEscape);
+	buttons[b].hotkey[0] = 'f';
+	b++;
 
-	if(enchant>=3) {
+	if(enchant>=2) {
 		sprintf(buttons[b].text, "        %sr%sun!        ", goldColorEscape, whiteColorEscape);
 		buttons[b].hotkey[0] = 'r';
 		b++;
 	}
 
-	if(enchant>=4) {
-		sprintf(buttons[b].text, "      %sa%sttack!       ", goldColorEscape, whiteColorEscape);
+	if(enchant>=3) {
+		sprintf(buttons[b].text, "       %sa%sttack!      ", goldColorEscape, whiteColorEscape);
 		buttons[b].hotkey[0] = 'a';
 		b++;
 	}
 
-	if(enchant>=5) {
-		sprintf(buttons[b].text, "      %sp%sause!        ", goldColorEscape, whiteColorEscape);
+	if(enchant>=4) {
+		sprintf(buttons[b].text, "       %sp%sause!       ", goldColorEscape, whiteColorEscape);
 		buttons[b].hotkey[0] = 'p';
 		b++;
 	}

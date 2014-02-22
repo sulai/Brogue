@@ -1156,8 +1156,6 @@ boolean cellHasTerrainFlag(short x, short y, unsigned long flagMask);
 											// This will max out at full regeneration in about two turns.
 											// This is the Syd nerf, after Syd broke the game over his knee with a +18 ring of regeneration.
 
-#define turnsAllyForgetCommand(enchant)    ((int) (200 * pow(1.35, (double) (enchant) - 1) + FLOAT_FUDGE))
-
 // structs
 
 enum dungeonLayers {
