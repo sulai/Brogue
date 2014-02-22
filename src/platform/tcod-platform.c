@@ -3,12 +3,17 @@
 #include <string.h>
 #include <time.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+
+
+
 #include "libtcod.h"
 #include "platform.h"
 
 #if TCOD_TECHVERSION >= 0x01050103
 #define USE_NEW_TCOD_API
 #endif
+
 
 extern playerCharacter rogue;
 extern TCOD_renderer_t renderer;
@@ -25,10 +30,295 @@ static struct mouseState missedMouse = {-1, -1, 0, 0};
 
 static int desktop_width, desktop_height;
 
+extern int candleFlicker;
+extern boolean cat_loading;
+
+//CAT-s: music loops, sound effect and background music
+Mix_Music *music[10];
+Mix_Chunk *sound[100];
+
+int currentLoop= -1;
+int currentMusic= -1;
+
+int loopVolume= 0;
+int battleVolume= 0;
+
+boolean battleOn= false;
+
+void initAudio()
+{
+#ifdef WINDOWS
+   SDL_Init(SDL_INIT_AUDIO);
+   Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
+
+//*** background music
+	music[0] = Mix_LoadMUS("./audio/bkg_intro.wav");
+	music[2] = Mix_LoadMUS("./audio/bkg_level1.wav");
+	music[3] = Mix_LoadMUS("./audio/bkg_level2.wav");
+	music[4] = Mix_LoadMUS("./audio/bkg_ending.wav");
+
+//*** sound effects
+	sound[0] = Mix_LoadWAV("./audio/bkg_battle.wav");
+
+	sound[11] = Mix_LoadWAV("./audio/act_stepGround.wav");
+	sound[12] = Mix_LoadWAV("./audio/act_stepWater.wav");
+    sound[13] = Mix_LoadWAV("./audio/act_stepSwim.wav");
+    sound[14] = Mix_LoadWAV("./audio/act_stepGrass.wav");
+    sound[15] = Mix_LoadWAV("./audio/act_stepBridge.wav");
+    sound[16] = Mix_LoadWAV("./audio/act_stepMud.wav");
+
+    sound[18] = Mix_LoadWAV("./audio/rea_find.wav");
+    sound[19] = Mix_LoadWAV("./audio/rea_discover.wav");
+
+    sound[4] = Mix_LoadWAV("./audio/act_pickup.wav");
+    sound[40] = Mix_LoadWAV("./audio/act_lunge.wav");
+    sound[43] = Mix_LoadWAV("./audio/act_open.wav");
+    sound[44] = Mix_LoadWAV("./audio/act_attack.wav");
+    sound[46] = Mix_LoadWAV("./audio/act_liberate.wav");
+    sound[47] = Mix_LoadWAV("./audio/act_throw.wav");
+    sound[48] = Mix_LoadWAV("./audio/act_drop.wav");
+    sound[49] = Mix_LoadWAV("./audio/act_drink.wav");
+    sound[50] = Mix_LoadWAV("./audio/act_eat.wav");
+    sound[51] = Mix_LoadWAV("./audio/act_charm.wav");
+    sound[52] = Mix_LoadWAV("./audio/act_unlock.wav");
+    sound[53] = Mix_LoadWAV("./audio/act_close.wav");
+    sound[56] = Mix_LoadWAV("./audio/act_vomit.wav");
+    sound[57] = Mix_LoadWAV("./audio/act_equip.wav");
+    sound[58] = Mix_LoadWAV("./audio/act_unequip.wav");
+    sound[59] = Mix_LoadWAV("./audio/act_search.wav");
+
+    sound[54] = Mix_LoadWAV("./audio/mon_attack.wav");
+    sound[55] = Mix_LoadWAV("./audio/mon_miss.wav");
+    sound[96] = Mix_LoadWAV("./audio/mon_die.wav");
+    sound[6] = Mix_LoadWAV("./audio/mon_pain.wav");
+    sound[8] = Mix_LoadWAV("./audio/mon_alert.wav");
+    sound[9] = Mix_LoadWAV("./audio/mon_purr.wav");
+    sound[10] = Mix_LoadWAV("./audio/mon_plunge.wav");
+
+    sound[3] = Mix_LoadWAV("./audio/rea_error.wav");
+    sound[5] = Mix_LoadWAV("./audio/rea_pain.wav");
+    sound[7] = Mix_LoadWAV("./audio/rea_click.wav");
+    sound[45] = Mix_LoadWAV("./audio/rea_miss.wav");
+
+    sound[20] = Mix_LoadWAV("./audio/rea_shatter.wav");
+    sound[21] = Mix_LoadWAV("./audio/rea_ignite.wav");
+    sound[22] = Mix_LoadWAV("./audio/rea_burst.wav");
+    sound[23] = Mix_LoadWAV("./audio/rea_gold.wav");
+    sound[24] = Mix_LoadWAV("./audio/rea_die.wav");
+    sound[25] = Mix_LoadWAV("./audio/rea_explode.wav");
+    sound[26] = Mix_LoadWAV("./audio/rea_stuck.wav");
+    sound[27] = Mix_LoadWAV("./audio/rea_machine.wav");
+    sound[28] = Mix_LoadWAV("./audio/rea_heart.wav");
+    sound[29] = Mix_LoadWAV("./audio/rea_foliage.wav");
+    sound[35] = Mix_LoadWAV("./audio/rea_vent.wav");
+    sound[36] = Mix_LoadWAV("./audio/rea_crumble.wav");
+    sound[37] = Mix_LoadWAV("./audio/rea_puff.wav");
+    sound[38] = Mix_LoadWAV("./audio/rea_cursed.wav");
+    sound[39] = Mix_LoadWAV("./audio/rea_fall.wav");
+
+    sound[30] = Mix_LoadWAV("./audio/int_stairs.wav");
+    sound[31] = Mix_LoadWAV("./audio/int_over.wav");
+
+    sound[60] = Mix_LoadWAV("./audio/usr_click.wav");
+    sound[61] = Mix_LoadWAV("./audio/usr_open.wav");
+    sound[62] = Mix_LoadWAV("./audio/usr_close.wav");
+    sound[63] = Mix_LoadWAV("./audio/usr_button.wav");
+    sound[64] = Mix_LoadWAV("./audio/usr_button2.wav");
+
+    sound[70] = Mix_LoadWAV("./audio/pot_life.wav");
+
+    sound[81] = Mix_LoadWAV("./audio/env_growl1.wav");
+    sound[82] = Mix_LoadWAV("./audio/env_growl2.wav");
+    sound[83] = Mix_LoadWAV("./audio/env_growl3.wav");
+    sound[84] = Mix_LoadWAV("./audio/env_growl4.wav");
+    sound[85] = Mix_LoadWAV("./audio/env_growl5.wav");
+
+
+    sound[80] = Mix_LoadWAV("./audio/env_brimstone.wav");
+    sound[86] = Mix_LoadWAV("./audio/env_chasm.wav");
+    sound[87] = Mix_LoadWAV("./audio/env_lava.wav");
+    sound[88] = Mix_LoadWAV("./audio/env_fire.wav");
+    sound[89] = Mix_LoadWAV("./audio/env_water.wav");
+    sound[99] = Mix_LoadWAV("./audio/env_mud.wav");
+    //sound[99] = Mix_LoadWAV("./audio/env_ambient.wav");
+
+
+    sound[90] = Mix_LoadWAV("./audio/act_wand.wav");
+    sound[91] = Mix_LoadWAV("./audio/act_read1.wav");
+    sound[92] = Mix_LoadWAV("./audio/act_read2.wav");
+    sound[93] = Mix_LoadWAV("./audio/act_read3.wav");
+    sound[94] = Mix_LoadWAV("./audio/act_read4.wav");
+    sound[95] = Mix_LoadWAV("./audio/act_read5.wav");
+
+
+//Mix_FreeMusic(music);
+//Mix_PlayingMusic() == 0
+#endif
+}
+
+void playMusic(int ID)
+{
+#ifdef WINDOWS
+    if(cat_loading)
+        return;
+
+    if(currentMusic != ID)
+    {
+        currentMusic= ID;
+        Mix_VolumeMusic(120);
+        Mix_PlayMusic(music[ID], -1);
+    }
+#endif
+}
+
+void stopMusic()
+{
+#ifdef WINDOWS
+    if(cat_loading)
+        return;
+
+    Mix_HaltMusic();
+    currentMusic= -1;
+#endif
+}
+
+static int soundLoop= 0;
+void playSound(int ID)
+{
+#ifdef WINDOWS
+
+    if(cat_loading)
+    {
+        playMusic(0);
+        return;
+    }
+
+
+    Mix_Volume(7, loopVolume);
+    Mix_Volume(6, battleVolume);
+
+
+    Mix_Volume(soundLoop, 120);
+    Mix_PlayChannel(soundLoop, sound[ID], 0);
+
+    soundLoop++;
+    if(soundLoop > 3)
+        soundLoop= 0;
+#endif
+}
+
+void playSoundNoOverlap(int ID)
+{
+#ifdef WINDOWS
+    if(cat_loading)
+    {
+        playMusic(0);
+        return;
+    }
+
+    Mix_Volume(4, 120);
+    Mix_Volume(7, loopVolume);
+    Mix_Volume(6, battleVolume);
+    Mix_PlayChannel(4, sound[ID], 0);
+#endif
+}
+
+
+void playSoundNoOverlap_steps(int ID)
+{
+#ifdef WINDOWS
+    Mix_Volume(5, 120);
+    Mix_Volume(7, loopVolume);
+    Mix_Volume(6, battleVolume);
+    Mix_PlayChannel(5, sound[ID], 0);
+#endif
+}
+
+void playLoop(int ID, int loopVol)
+{
+#ifdef WINDOWS
+    if(cat_loading)
+    {
+        playMusic(0);
+        return;
+    }
+
+    loopVolume= loopVol;
+    Mix_Volume(7, loopVolume);
+
+    if(currentLoop != ID)
+    {
+        currentLoop= ID;
+        Mix_PlayChannel(7, sound[ID], -1);
+    }
+#endif
+}
+
+void stopLoop()
+{
+#ifdef WINDOWS
+    loopVolume= 0;
+    currentLoop= -1;
+    Mix_HaltChannel(7);
+#endif
+}
+
+
+void playBattle(boolean start)
+{
+#ifdef WINDOWS
+    if(cat_loading)
+    {
+        playMusic(0);
+        return;
+    }
+
+    if(start)
+    {
+        battleVolume= 120;
+        Mix_Volume(6, battleVolume);
+
+        if(!battleOn)
+        {
+            Mix_PlayChannel(6, sound[0], -1);
+            Mix_PauseMusic();
+        }
+
+        battleOn= true;
+    }
+    else
+    if(battleOn && !start)
+    {
+        battleOn= false;
+        Mix_ResumeMusic();
+        Mix_HaltChannel(6);
+    }
+#endif
+}
+
+
+void fadeBattle(int dVolume)
+{
+#ifdef WINDOWS
+	battleVolume+= dVolume;
+	if(battleVolume > 120)
+		battleVolume= 120;
+	else
+	if(battleVolume < 0)
+		battleVolume= 0;
+
+    Mix_Volume(6, battleVolume);
+#endif
+}
+
+
+
+
+
 static void loadFont(int detectSize)
 {
 	char font[60];
-	
+
 	if (detectSize) {
 		int fontWidths[13] = {112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 272, 288, 304}; // widths of the font graphics (divide by 16 to get individual character width)
 		int fontHeights[13] = {176, 208, 240, 272, 304, 336, 368, 400, 432, 464, 496, 528, 528}; // heights of the font graphics (divide by 16 to get individual character height)
@@ -52,7 +342,7 @@ static void loadFont(int detectSize)
 	}
 
 	sprintf(font, "fonts/font-%i.png", brogueFontSize);
-	
+
 	TCOD_console_set_custom_font(font, (TCOD_FONT_TYPE_GREYSCALE | TCOD_FONT_LAYOUT_ASCII_INROW), 0, 0);
 	TCOD_console_init_root(COLS, ROWS, "Brogue", false, renderer);
 
@@ -70,6 +360,9 @@ static void gameLoop()
 		return;
 	}
 
+    initAudio();
+    playMusic(0);
+
 	loadFont(true);
 	rogueMain();
 
@@ -80,17 +373,17 @@ static void tcod_plotChar(uchar inputChar,
 			  short xLoc, short yLoc,
 			  short foreRed, short foreGreen, short foreBlue,
 			  short backRed, short backGreen, short backBlue) {
-	
+
 	TCOD_color_t fore;
 	TCOD_color_t back;
-	
+
 	fore.r = (uint8) foreRed * 255 / 100;
 	fore.g = (uint8) foreGreen * 255 / 100;
 	fore.b = (uint8) foreBlue * 255 / 100;
 	back.r = (uint8) backRed * 255 / 100;
 	back.g = (uint8) backGreen * 255 / 100;
 	back.b = (uint8) backBlue * 255 / 100;
-	
+
 	if (inputChar == STATUE_CHAR) {
 		inputChar = 223;
 	} else if (inputChar > 255) {
@@ -157,7 +450,7 @@ static boolean processSpecialKeystrokes(TCOD_key_t k, boolean text) {
 	} else if ((k.vk == TCODK_PAGEUP
 				|| ((!text) && k.vk == TCODK_CHAR && (k.c == '=' || k.c == '+')))
 			   && brogueFontSize < 13) {
-		
+
 		if (isFullScreen) {
 			TCOD_console_set_fullscreen(0);
 			isFullScreen = 0;
@@ -235,7 +528,7 @@ static boolean processKeystroke(TCOD_key_t key, rogueEvent *returnEvent, boolean
 	if (processSpecialKeystrokes(key, text)) {
 		return false;
 	}
-	
+
 	returnEvent->eventType = KEYSTROKE;
 	getModifiers(returnEvent);
 	switch (key.vk) {
@@ -338,7 +631,7 @@ static boolean tcod_pauseForMilliseconds(short milliseconds)
 		bufferedKey = TCOD_console_check_for_keypress(TCOD_KEY_PRESSED);
 	}
 	#endif
-	
+
 	if (missedMouse.lmb == 0 && missedMouse.rmb == 0) {
 		mouse = TCOD_mouse_get_status();
 		if (mouse.lbutton_pressed || mouse.rbutton_pressed) {
@@ -348,12 +641,12 @@ static boolean tcod_pauseForMilliseconds(short milliseconds)
 			if (mouse.rbutton_pressed) missedMouse.rmb = MOUSE_DOWN;
 		}
 	}
-	
+
 	return (bufferedKey.vk != TCODK_NONE || missedMouse.lmb || missedMouse.rmb);
 }
 
 
-#define PAUSE_BETWEEN_EVENT_POLLING		36//17
+#define PAUSE_BETWEEN_EVENT_POLLING		30 //36//17
 
 static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput, boolean colorsDance)
 {
@@ -362,16 +655,19 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 	TCOD_mouse_t mouse;
 	uint32 theTime, waitTime;
 	short x, y;
-	
-	TCOD_console_flush();
+
+//	TCOD_console_flush();
 
 	key.vk = TCODK_NONE;
 
+
 	if (noMenu && rogue.nextGame == NG_NOTHING) rogue.nextGame = NG_NEW_GAME;
-	
+
 	for (;;) {
+
 		theTime = TCOD_sys_elapsed_milli();
-		
+
+
 		if (TCOD_console_is_window_closed()) {
 			rogue.gameHasEnded = true; // causes the game loop to terminate quickly
 			rogue.nextGame = NG_QUIT; // causes the menu to drop out immediately
@@ -379,9 +675,9 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 			returnEvent->param1 = ESCAPE_KEY;
 			return;
 		}
-		
+
 		tryAgain = false;
-		
+
 		if (bufferedKey.vk != TCODK_NONE) {
 			rewriteKey(&bufferedKey, textInput);
 			if (processKeystroke(bufferedKey, returnEvent, textInput)) {
@@ -391,7 +687,7 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 				bufferedKey.vk = TCODK_NONE;
 			}
 		}
-		
+
 		if (missedMouse.lmb) {
 			returnEvent->eventType = missedMouse.lmb;
 
@@ -403,7 +699,7 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 			if (TCOD_console_is_key_pressed(TCODK_SHIFT)) {
 				returnEvent->shiftKey = true;
 			}
-			
+
 			missedMouse.lmb = missedMouse.lmb == MOUSE_DOWN ? MOUSE_UP : 0;
 			return;
 		}
@@ -419,20 +715,32 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 			if (TCOD_console_is_key_pressed(TCODK_SHIFT)) {
 				returnEvent->shiftKey = true;
 			}
-			
+
 			missedMouse.rmb = missedMouse.rmb == MOUSE_DOWN ? MOUSE_UP : 0;
 			return;
 		}
-		
-		if (!(serverMode || (SDL_GetAppState() & SDL_APPACTIVE))) {
+
+
+		if (!(serverMode || (SDL_GetAppState() & SDL_APPACTIVE)))
 			TCOD_sys_sleep_milli(100);
-		} else {
-			if (colorsDance) {
-				shuffleTerrainColors(3, true);
-				commitDraws();
-			}
-			TCOD_console_flush();
-		}
+		else
+		{
+            if(colorsDance)
+            {
+                if(++candleFlicker > 9)
+                {
+                    candleFlicker= 0;
+                    cat_updateFieldOfViewDisplay();
+                }
+
+                if(!rogue.trueColorMode)
+                    shuffleTerrainColors(3, true);
+
+                commitDraws();
+            }
+
+            TCOD_console_flush();
+        }
 
 		#ifdef USE_NEW_TCOD_API
 		TCOD_sys_check_for_event(TCOD_EVENT_KEY_PRESS | TCOD_EVENT_MOUSE, &key, &mouse);
@@ -507,11 +815,12 @@ static void tcod_nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput,
 			}
 		}
 
+
 		waitTime = PAUSE_BETWEEN_EVENT_POLLING + theTime - TCOD_sys_elapsed_milli();
-		
 		if (waitTime > 0 && waitTime <= PAUSE_BETWEEN_EVENT_POLLING) {
 			TCOD_sys_sleep_milli(waitTime);
 		}
+
 	}
 }
 
@@ -592,7 +901,7 @@ static void tcod_remap(const char *input_name, const char *output_name) {
 	// find input and output in the list of tcod keys, if it's there
 	int i;
 	struct mapsymbol *sym = malloc(sizeof(*sym));
-	
+
 	if (sym == NULL) return; // out of memory?  seriously?
 
 	// default to treating the names as literal ascii symbols
@@ -617,7 +926,7 @@ static void tcod_remap(const char *input_name, const char *output_name) {
 			break;
 		}
 	}
-	
+
 	sym->next = keymap;
 	keymap = sym;
 }

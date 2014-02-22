@@ -7,6 +7,7 @@ src/libtcod-1.5.2
 *.tar.gz
 *.o
 bin/*/fonts
+bin/*/audio
 bin/*/Brogue seed catalog.txt
 bin/*/BrogueHighScores.txt
 bin/*/Readme.rtf
