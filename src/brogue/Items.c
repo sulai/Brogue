@@ -3573,8 +3573,7 @@ short communicateNearbyAllies(const short distance, int allyStatus, short turns,
 	else strcpy(msg, "Your roaring voice echoes from the depths of the dungeon!");
 
 	if(maxAllyDistance>0) {
-		if(allyStatus==0)                     strcat(msg, " Follow me!");
-		if(allyStatus==STATUS_ALLY_FOLLOW)    strcat(msg, " Follow me - stay close!");
+		if(allyStatus==STATUS_ALLY_FOLLOW)    strcat(msg, " Follow me!");
 		if(allyStatus==STATUS_ALLY_GUARDING)  strcat(msg, " Stand guard!");
 		if(allyStatus==STATUS_ALLY_RUN)       strcat(msg, " Run!");
 		if(allyStatus==STATUS_ALLY_ATTACK)    strcat(msg, " Attack!");
@@ -5583,14 +5582,13 @@ void useCharm(item *theItem) {
         	messageWithColor("You take a deep breath of the magical gas!", &itemMessageColor, false);
         	short actionKey = printCommandDialog(theItem,  max(2, mapToWindowX(DCOLS - 30 - 42)), mapToWindowY(2), 30, theItem->enchant1);
         	short allyStatus = 0;
-        	if(actionKey=='t')       allyStatus = 0;
-        	else if(actionKey=='f') allyStatus = STATUS_ALLY_FOLLOW;
+        	if(actionKey=='f') allyStatus = STATUS_ALLY_FOLLOW;
         	else if(actionKey=='g') allyStatus = STATUS_ALLY_GUARDING;
         	else if(actionKey=='r') allyStatus = STATUS_ALLY_RUN;
         	else if(actionKey=='p') allyStatus = STATUS_ALLY_PAUSE;
         	else if(actionKey=='a') allyStatus = STATUS_ALLY_ATTACK;
         	else break;
-        	communicateNearbyAllies(100, allyStatus, turnsAllyForgetCommand(theItem->enchant1), 0);
+        	communicateNearbyAllies(100, allyStatus, 100, 50);
             break;
         default:
             break;
