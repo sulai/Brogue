@@ -697,7 +697,7 @@ void pickUpItemAt(short x, short y) {
 		message("Error: Expected item; item not found.", true);
 		return;
 	}
-
+	
 	if ((theItem->flags & ITEM_KIND_AUTO_ID)
         && tableForItemCategory(theItem->category)
 		&& !(tableForItemCategory(theItem->category)[theItem->kind].identified)) {
@@ -2621,7 +2621,7 @@ char displayInventory(unsigned short categoryMask,
 		
 		// Was an item selected?
 		if (highlightItemLine > -1 && (waitForAcknowledge || theEvent.shiftKey || theEvent.controlKey)) {
-
+			
 			do {
 				// Yes. Highlight the selected item. Do this by changing the button color and re-displaying it.
 				
@@ -3546,7 +3546,7 @@ short communicateNearbyAllies(const short distance, int allyStatus, short turns,
 
 				if(allyStatus!=0) {
         			unsigned long friendBonus = 0;
-        			if(div>0) friendBonus = (rogue.absoluteTurnNumber - monst->absoluteTurnFreed) / div + 2;
+        			if(div>0) friendBonus = (rogue.absoluteTurnNumber - monst->absoluteTurnFreed) / div + 1;
         			monst->status[allyStatus] = monst->maxStatus[allyStatus] = friendBonus + turns;
         		}
 
@@ -5397,7 +5397,7 @@ void throwCommand(item *theItem) {
 		itemName(thrownItem, theName, false, false, NULL);
 		originLoc[0] = player.xLoc;
 		originLoc[1] = player.yLoc;
-
+		
 		throwItem(thrownItem, &player, zapTarget, maxDistance);
 	} else {
 		return;
@@ -5721,7 +5721,7 @@ void apply(item *theItem, boolean recordCommands) {
 	if (revealItemType) {
 		autoIdentify(theItem);
 	}
-
+	
 	if (theItem->category & CHARM) {
         theItem->charges = charmRechargeDelay(theItem->kind, theItem->enchant1);
     } else if (theItem->charges > 0) {
@@ -5831,7 +5831,7 @@ void readScroll(item *theItem) {
 	creature *monst;
 	boolean hadEffect = false;
 	char buf[2*COLS], buf2[COLS];
-
+    
     rogue.featRecord[FEAT_ARCHIVIST] = false;
 	
 	switch (theItem->kind) {
@@ -6401,7 +6401,7 @@ void unequip(item *theItem) {
 	if (theItem == NULL) {
 		return;
 	}
-
+	
 	command[1] = theItem->inventoryLetter;
 	command[2] = '\0';
 	

@@ -2326,7 +2326,7 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 			break;
 		case 'f': // follow me! (short leash)
 			communicateNearbyAllies(100, STATUS_ALLY_FOLLOW, 0, 100);
-			recordKeystroke('F', false, true);
+			recordKeystroke('f', false, true);
 			playerTurnEnded();
 			break;
 		case 'g': // stand guard!

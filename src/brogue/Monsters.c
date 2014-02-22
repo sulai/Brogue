@@ -2856,7 +2856,7 @@ void moveAlly(creature *monst) {
 		dir = scentDirection(monst);
 		if (dir == -1 || (monst->bookkeepingFlags & MONST_GIVEN_UP_ON_SCENT)) {
 			monst->bookkeepingFlags |= MONST_GIVEN_UP_ON_SCENT;
-				moveTowardLeader(monst);
+			moveTowardLeader(monst);
 		} else {
 			if(!monst->status[STATUS_ALLY_GUARDING]) {
 				targetLoc[0] = x + nbDirs[dir][0];
