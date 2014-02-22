@@ -1586,7 +1586,7 @@ void populateCreatureCostMap(short **costMap, creature *monst) {
 	}
 }
 
-#define exploreGoalValue(x, y)	(0 - abs((x) - DCOLS / 2) / 3 - abs((x) - DCOLS / 2) / 4)
+#define exploreGoalValue(x, y)	(0 - abs((x) - DCOLS / 2) / 2 - abs((y) - DROWS / 2) / 4)
 
 void getExploreMap(short **map, boolean headingToStairs) {// calculate explore map
 	short i, j;
@@ -1738,6 +1738,116 @@ boolean explore(short frameDelay) {
 	refreshSideBar(-1, -1, false);
 	freeGrid(distanceMap);
 	return madeProgress;
+}
+
+boolean pickExploreTarget(short *target) {
+	short i, j, newX, newY, distance, oldDistance, shortestDistance;
+    boolean previouslyTargettingItem;
+	item *theItem;
+    newX = newY = -1;
+    shortestDistance = 30000;
+
+    theItem = itemAtLoc(target[0], target[1]);
+    previouslyTargettingItem = theItem;
+    oldDistance = target[0] == -1 ? 0 : playerPathingMap[target[0]][target[1]];
+
+	for (i=0; i<DCOLS; i++) {
+		for (j=0; j<DROWS; j++) {
+
+            distance = playerPathingMap[i][j];
+
+            if  (pmap[i][j].flags & DISCOVERED
+                 && distance > oldDistance
+                 && distance < shortestDistance) {
+
+                theItem = itemAtLoc(i, j);
+                if  (theItem && !(theItem->flags & ITEM_PLAYER_AVOIDS)) {
+
+                    newX = i;
+                    newY = j;
+                    shortestDistance = distance;
+                } else if (adjacentToUnexplored(i, j)
+                           && (previouslyTargettingItem || distanceBetween(i, j, target[0], target[1]) > 4)) {
+
+                    newX = i;
+                    newY = j;
+                    shortestDistance = distance;
+                }
+            }
+		}
+	}
+
+    if (newX != -1) {
+        target[0] = newX;
+        target[1] = newY;
+        return true;
+    }
+
+    return false;
+}
+
+boolean isDiscoveredAndImpassable(short i, short j) {
+    return (pmap[i][j].flags & DISCOVERED) 
+        && cellHasTerrainFlag(i, j, T_OBSTRUCTS_PASSABILITY);
+}
+
+boolean adjacentToUnexplored(short i, short j) {
+    short di, dj;
+
+    for (di = -1; di < 2; di++) {
+        for (dj = -1; dj < 2; dj++) {
+            if ( ! (pmap[i+di][j+dj].flags & DISCOVERED)
+                 && (di != 0 || dj != 0)) {
+
+                // Don't bother looking at the corner between two walls.
+                if ( ! (di != 0 && dj != 0
+                        && isDiscoveredAndImpassable(i+di, j)
+                        && isDiscoveredAndImpassable(i, j+dj))) {
+
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+boolean shortenPath(short* target) {
+    short di, dj, x, y, newX, newY, distance;
+
+    x = target[0];
+    y = target[1];
+    newX = newY = -1;
+
+    if (x == -1
+        || (x == player.xLoc && y == player.yLoc)) {
+
+        return false;
+    }
+
+    distance = 0;
+
+    for (di = -1; di < 2; di++) {
+        for (dj = -1; dj < 2; dj++) {
+            if ((di != 0 || dj != 0)
+                && (pmap[x+di][y+dj].flags & IS_IN_PATH)
+                && playerPathingMap[x+di][y+dj] > distance) {
+
+                distance = playerPathingMap[x+di][y+dj];
+                newX = x+di;
+                newY = y+dj;
+            }
+        }
+    }
+
+    if (newX != -1) {
+        target[0] = newX;
+        target[1] = newY;
+        return true;
+    }
+
+    return false;
 }
 
 void autoPlayLevel(boolean fastForward) {

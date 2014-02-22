@@ -2130,14 +2130,14 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 			strcat(buf, "\n\n");
 			if ((theItem->flags & (ITEM_IDENTIFIED | ITEM_MAX_CHARGES_KNOWN)) || rogue.playbackOmniscience) {
 				if (theItem->charges) {
-					sprintf(buf2, "%i charge%s remain%s. A scroll of recharging will add 1 charge, and enchanting this wand will add %i charge%s.",
+					sprintf(buf2, "%i charge%s remain%s. Enchanting this wand will add %i charge%s.",
 							theItem->charges,
 							(theItem->charges == 1 ? "" : "s"),
 							(theItem->charges == 1 ? "s" : ""),
                             wandTable[theItem->kind].range.lowerBound,
                             (wandTable[theItem->kind].range.lowerBound == 1 ? "" : "s"));
 				} else {
-					sprintf(buf2, "No charges remain.  A scroll of recharging will add 1 charge, and enchanting this wand will add %i charge%s.",
+					sprintf(buf2, "No charges remain.  Enchanting this wand will add %i charge%s.",
                             wandTable[theItem->kind].range.lowerBound,
                             (wandTable[theItem->kind].range.lowerBound == 1 ? "" : "s"));
 				}
@@ -4343,12 +4343,14 @@ boolean nextTargetAfter(short *returnX,
                         boolean targetAllies,
                         boolean targetItems,
                         boolean targetTerrain,
-                        boolean requireOpenPath) {
+                        boolean requireOpenPath,
+                        boolean previousTarget) {
     short i, n;
     short selectedIndex = -1;
     creature *monst;
     item *theItem;
-    
+    short newTargetX, newTargetY;
+
     for (i=0; i<ROWS; i++) {
         if (rogue.sidebarLocationList[i][0] == targetX
             && rogue.sidebarLocationList[i][1] == targetY
@@ -4360,45 +4362,52 @@ boolean nextTargetAfter(short *returnX,
     }
     
     for (i=1; i<=ROWS; i++) {
-        n = (selectedIndex + i) % ROWS;
-        targetX = rogue.sidebarLocationList[n][0];
-        targetY = rogue.sidebarLocationList[n][1];
-        if (targetX != -1
-            && (targetX != player.xLoc || targetY != player.yLoc)
-            && (!requireOpenPath || openPathBetween(player.xLoc, player.yLoc, targetX, targetY))) {
+        if (previousTarget) {
+            n = (selectedIndex - i + ROWS) % ROWS;
+        } else {
+            n = (selectedIndex + i) % ROWS;
+        }
+        newTargetX = rogue.sidebarLocationList[n][0];
+        newTargetY = rogue.sidebarLocationList[n][1];
+        if (targetX == newTargetX && targetY == newTargetY) {
+            continue;
+        }
+        if (newTargetX != -1
+            && (newTargetX != player.xLoc || newTargetY != player.yLoc)
+            && (!requireOpenPath || openPathBetween(player.xLoc, player.yLoc, newTargetX, newTargetY))) {
 
 #ifdef BROGUE_ASSERTS
-            assert(coordinatesAreInMap(targetX, targetY));
+            assert(coordinatesAreInMap(newTargetX, newTargetY));
 #endif
 
-            monst = monsterAtLoc(targetX, targetY);
+            monst = monsterAtLoc(newTargetX, newTargetY);
             if (monst) {
                 
                 if (monstersAreEnemies(&player, monst)) {
                     if (targetEnemies) {
-                        *returnX = targetX;
-                        *returnY = targetY;
+                        *returnX = newTargetX;
+                        *returnY = newTargetY;
                         return true;
                     }
                 } else {
                     if (targetAllies) {
-                        *returnX = targetX;
-                        *returnY = targetY;
+                        *returnX = newTargetX;
+                        *returnY = newTargetY;
                         return true;
                     }
                 }
             }
             
-            theItem = itemAtLoc(targetX, targetY);
+            theItem = itemAtLoc(newTargetX, newTargetY);
             if (!monst && theItem && targetItems) {
-                *returnX = targetX;
-                *returnY = targetY;
+                *returnX = newTargetX;
+                *returnY = newTargetY;
                 return true;
             }
             
             if (!monst && !theItem && targetTerrain) {
-                *returnX = targetX;
-                *returnY = targetY;
+                *returnX = newTargetX;
+                *returnY = newTargetY;
                 return true;
             }
         }
@@ -4516,6 +4525,7 @@ short hiliteTrajectory(short coordinateList[DCOLS][2], short numCells, boolean e
 boolean moveCursor(boolean *targetConfirmed,
 				   boolean *canceled,
 				   boolean *tabKey,
+                   boolean *backTabKey,
 				   short targetLoc[2],
 				   rogueEvent *event,
 				   buttonState *state,
@@ -4534,7 +4544,7 @@ boolean moveCursor(boolean *targetConfirmed,
 	cursor[0] = targetLoc[0];
 	cursor[1] = targetLoc[1];
 	
-	*targetConfirmed = *canceled = *tabKey = false;
+	*targetConfirmed = *canceled = *tabKey = *backTabKey = false;
 	sidebarHighlighted = false;
 	
 	do {
@@ -4672,10 +4682,34 @@ boolean moveCursor(boolean *targetConfirmed,
 					}
 					cursorMovementCommand = movementKeystroke = keysMoveCursor;
 					break;
+                case PICK_TARGET_KEY:
+                    if (pickExploreTarget(cursor)) {
+                        cursorMovementCommand = movementKeystroke = keysMoveCursor;
+                    } else {
+                        *canceled = true;
+                    }
+                    break;
+                case SHORTEN_PATH_KEY:
+                    if (shortenPath(cursor)) {
+                        cursorMovementCommand = movementKeystroke = keysMoveCursor;
+                    } else {
+                        *canceled = true;
+                    }
+                    break;
+                case TOGGLE_AVOID_ITEM_KEY:
+                    toggleAvoidItemAtLocation(cursor);
+                    break;
 				case TAB_KEY:
 				case NUMPAD_0:
-					*tabKey = true;
-					break;
+                    if (theEvent.shiftKey) {
+                        *backTabKey = true;
+                    } else {
+                        *tabKey = true;
+                    }
+                    break;
+                case BACKTICK_KEY:
+                    *backTabKey = true;
+                    break;
 				case RETURN_KEY:
 				case ENTER_KEY:
 					*targetConfirmed = true;
@@ -4750,10 +4784,10 @@ boolean chooseTarget(short returnLoc[2],
 					 boolean passThroughCreatures) {
 	short originLoc[2], targetLoc[2], oldTargetLoc[2], coordinates[DCOLS][2], numCells, i, distance, newX, newY;
 	creature *monst;
-	boolean canceled, targetConfirmed, tabKey, cursorInTrajectory, focusedOnSomething = false;
+	boolean canceled, targetConfirmed, tabKey, backTabKey, cursorInTrajectory, focusedOnSomething = false;
 	rogueEvent event;
     short oldRNG;
-		
+
 	if (rogue.playbackMode) {
 		// In playback, pull the next event (a mouseclick) and use that location as the target.
 		pullMouseClickDuringPlayback(returnLoc);
@@ -4782,7 +4816,7 @@ boolean chooseTarget(short returnLoc[2],
 			monst = rogue.lastTarget;
 		} else {
 			//rogue.lastTarget = NULL;
-			if (nextTargetAfter(&newX, &newY, targetLoc[0], targetLoc[1], !targetAllies, targetAllies, false, false, true)) {
+			if (nextTargetAfter(&newX, &newY, targetLoc[0], targetLoc[1], !targetAllies, targetAllies, false, false, true, false)) {
                 targetLoc[0] = newX;
                 targetLoc[1] = newY;
             }
@@ -4804,7 +4838,7 @@ boolean chooseTarget(short returnLoc[2],
 		numCells = min(numCells, distanceBetween(player.xLoc, player.yLoc, targetLoc[0], targetLoc[1]));
 	}
 	
-	targetConfirmed = canceled = tabKey = false;
+	targetConfirmed = canceled = tabKey = backTabKey = false;
 	
 	do {
 		printLocationDescription(targetLoc[0], targetLoc[1]);
@@ -4818,8 +4852,8 @@ boolean chooseTarget(short returnLoc[2],
 			return false;
 		}
 		
-		if (tabKey) {
-			if (nextTargetAfter(&newX, &newY, targetLoc[0], targetLoc[1], !targetAllies, targetAllies, false, false, true)) {
+		if (tabKey || backTabKey) {
+			if (nextTargetAfter(&newX, &newY, targetLoc[0], targetLoc[1], !targetAllies, targetAllies, false, false, true, backTabKey)) {
                 targetLoc[0] = newX;
                 targetLoc[1] = newY;
             }
@@ -4864,7 +4898,7 @@ boolean chooseTarget(short returnLoc[2],
 		
 		oldTargetLoc[0] = targetLoc[0];
 		oldTargetLoc[1] = targetLoc[1];
-		moveCursor(&targetConfirmed, &canceled, &tabKey, targetLoc, &event, NULL, false, true, false);
+		moveCursor(&targetConfirmed, &canceled, &tabKey, &backTabKey, targetLoc, &event, NULL, false, true, false);
 		if (event.eventType == RIGHT_MOUSE_UP) { // Right mouse cancels.
 			canceled = true;
 		}
@@ -6475,6 +6509,16 @@ item *dropItem(item *theItem) {
 		placeItem(theItem, player.xLoc, player.yLoc);
 		return theItem;
 	}
+}
+
+boolean toggleAvoidItemAtLocation(short *location) {
+	item *theItem;
+    theItem = itemAtLoc(location[0], location[1]);
+    if (theItem) {
+        theItem->flags ^= ITEM_PLAYER_AVOIDS;
+        return true;
+    }
+    return false;
 }
 
 void recalculateEquipmentBonuses() {
