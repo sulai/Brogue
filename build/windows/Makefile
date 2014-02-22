@@ -3,7 +3,7 @@ BIN=..\..\bin\windows
 RES=..\..\res
 LIBTCODDIR=$(SRC)\libtcod-1.5.2
 SDLDIR=$(SRC)\SDL-1.2.14
-CFLAGS=$(FLAGS) -I$(LIBTCODDIR)/include -I$(SDLDIR)/include -I$(SRC)/brogue -I$(SRC)/platform -DBROGUE_TCOD -Wall
+CFLAGS=$(FLAGS) -I$(LIBTCODDIR)/include -I$(SDLDIR)/include -I$(SRC)/brogue -I$(SRC)/platform -DBROGUE_TCOD -DWINDOWS -Wall
 
 %.o : %.c
 	mingw32-gcc $(CFLAGS) -O2 -s -o $@ -c $<
@@ -41,5 +41,5 @@ brogue-icon.o : brogue-icon.ico icon.rc
 	windres icon.rc brogue-icon.o
 
 brogue : ${OBJS} brogue-icon.o
-	mingw32-g++ -o $(BIN)/brogue.exe ${OBJS} brogue-icon.o -L. -ltcod-mingw -lSDL -L$(LIBTCODDIR)/ -static-libgcc -static-libstdc++ -mwindows
+	mingw32-g++ -o $(BIN)/brogue.exe ${OBJS} brogue-icon.o -L. -ltcod-mingw -lSDL -lSDL_mixer -L$(LIBTCODDIR)/ -static-libgcc -static-libstdc++ -mwindows
 

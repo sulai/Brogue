@@ -4,7 +4,7 @@
  *
  *  Created by Brian Walker on 2/8/09.
  *  Copyright 2012. All rights reserved.
- *  
+ *
  *  This file is part of Brogue.
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 extern tcell tmap[DCOLS][DROWS];						// grids with info about the map
 extern pcell pmap[DCOLS][DROWS];						// grids with info about the map
