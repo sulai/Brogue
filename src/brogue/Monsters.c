@@ -2832,7 +2832,7 @@ void moveAlly(creature *monst) {
 			if (canSeeMonster(monst)) {
 				monsterName(monstName, monst, true);
 				sprintf(buf, "%s begins %s the fallen %s.", monstName, monsterText[monst->info.monsterID].absorbing, monst->targetCorpseName);
-				messageWithColor(buf, &goodMessageColor, false);
+				messageWithColor(buf, &goodMessageColor, true);
 			}
 			monst->corpseAbsorptionCounter = 20;
 			monst->bookkeepingFlags |= MONST_ABSORBING;

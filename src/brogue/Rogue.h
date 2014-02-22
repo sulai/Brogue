@@ -1036,6 +1036,9 @@ enum tileFlags {
 #define MESSAGE_ARCHIVE_KEY	'M'
 #define HELP_KEY			'?'
 #define DISCOVERIES_KEY		'D'
+#define PICK_TARGET_KEY     'w'
+#define SHORTEN_PATH_KEY    ','
+#define TOGGLE_AVOID_ITEM_KEY 'v'
 #define EXPLORE_KEY			'x'
 #define AUTOPLAY_KEY		'A'
 #define SEED_KEY			'~'
@@ -1045,6 +1048,7 @@ enum tileFlags {
 #define ENTER_KEY			'\012'
 #define DELETE_KEY			'\177'
 #define TAB_KEY				'\t'
+#define BACKTICK_KEY        '`'
 #define PERIOD_KEY			'.'
 #define VIEW_RECORDING_KEY	'V'
 #define LOAD_SAVED_GAME_KEY	'O'
@@ -2588,6 +2592,9 @@ extern "C" {
     void populateGenericCostMap(short **costMap);
 	void populateCreatureCostMap(short **costMap, creature *monst);
 	void getExploreMap(short **map, boolean headingToStairs);
+    boolean pickExploreTarget(short *target);
+    boolean adjacentToUnexplored(short i, short j);
+    boolean shortenPath(short* target);
 	boolean explore(short frameDelay);
 	void clearCursorPath();
 	void mainInputLoop();
@@ -2731,10 +2738,12 @@ extern "C" {
                             boolean targetAllies,
                             boolean targetItems,
                             boolean targetTerrain,
-                            boolean requireOpenPath);
+                            boolean requireOpenPath,
+                            boolean previousTarget);
 	boolean moveCursor(boolean *targetConfirmed,
 					   boolean *canceled,
 					   boolean *tabKey,
+                       boolean *reverseTabKey,
 					   short targetLoc[2],
 					   rogueEvent *event,
 					   buttonState *state,
@@ -2769,6 +2778,7 @@ extern "C" {
 	item *keyOnTileAt(short x, short y);
 	void unequip(item *theItem);
 	void drop(item *theItem);
+    boolean toggleAvoidItemAtLocation(short *location);
 	void findAlternativeHomeFor(creature *monst, short *x, short *y, boolean chooseRandomly);
 	boolean getQualifyingLocNear(short loc[2],
 								 short x, short y,
