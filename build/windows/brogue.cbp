@@ -7,8 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release">
-				<Option output="..\..\windows\brogue" prefix_auto="1" extension_auto="1" />
-				<Option working_dir=".." />
+				<Option output="bin\windows\brogue" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\" />
 				<Option object_output="obj\Release\" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -17,15 +17,15 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-O2" />
 					<Add option="-DBROGUE_TCOD" />
-					<Add directory="..\..\src\brogue" />
-					<Add directory="..\..\src\platform" />
-					<Add directory="..\..\src\libtcod-1.5.1\include" />
-					<Add directory="..\..\src\SDL-1.2.14\include" />
+					<Add directory="src\brogue" />
+					<Add directory="src\platform" />
+					<Add directory="src\libtcod-1.5.2\include" />
+					<Add directory="src\SDL-1.2.14\include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="..\..\src\libtcod-1.5.1\lib\libtcod-mingw.a" />
-					<Add library="..\..\src\SDL-1.2.14\lib\libSDL.dll.a" />
+					<Add library="src\libtcod-1.5.1\lib\libtcod-mingw.a" />
+					<Add library="src\SDL-1.2.14\lib\libSDL.dll.a" />
 				</Linker>
 			</Target>
 		</Build>
