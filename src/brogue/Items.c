@@ -3600,6 +3600,21 @@ void wakeupNearbyMonsters(const short distance) {
     }
 }
 
+void allyCommand() {
+	short actionKey = printCommandDialog(NULL, max(2, mapToWindowX(DCOLS - 30 - 42)), mapToWindowY(2), 30, 10);
+	short allyStatus = 0;
+	if(actionKey=='f') allyStatus = STATUS_ALLY_FOLLOW;
+	else if(actionKey=='g') allyStatus = STATUS_ALLY_GUARDING;
+	else if(actionKey=='r') allyStatus = STATUS_ALLY_RUN;
+	else if(actionKey=='p') allyStatus = STATUS_ALLY_PAUSE;
+	else if(actionKey=='a') allyStatus = STATUS_ALLY_ATTACK;
+	else return;
+	communicateNearbyAllies(100, allyStatus, 0, 50);
+	recordKeystroke('C', false, true);
+	recordKeystroke(actionKey, false, false);
+	playerTurnEnded();
+}
+
 void crystalize(short radius) {
 	extern color forceFieldColor;
 	short i, j;

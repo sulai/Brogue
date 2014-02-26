@@ -27,6 +27,8 @@
 #include "Rogue.h"
 #include "IncludeGlobals.h"
 
+unsigned long printCommandDialog(item *theItem, short x, short y, short width, short enchant);
+
 // Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the number of steps in the path.
 short getPathOnMap(short path[1000][2], short **map, short originX, short originY) {
 	short dir, x, y, steps;
@@ -2333,6 +2335,9 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 			communicateNearbyAllies(100, STATUS_ALLY_GUARDING, 0, 10);
 			recordKeystroke('g', false, true);
 			playerTurnEnded();
+			break;
+		case 'C': // command key
+			allyCommand();
 			break;
 		case MESSAGE_ARCHIVE_KEY:
 			displayMessageArchive();
