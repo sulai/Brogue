@@ -285,6 +285,11 @@ item *makeItemInto(item *theItem, unsigned long itemCategory, short itemKind) {
 			theItem->displayChar = GOLD_CHAR;
 			theItem->quantity = rand_range(50 + rogue.depthLevel * 10, 100 + rogue.depthLevel * 15);
 			break;
+		case POWER:
+			theEntry = NULL;
+			theItem->displayChar = POWER_CHAR;
+			theItem->quantity = 1;
+			break;
 		case AMULET:
 			theEntry = NULL;
 			theItem->displayChar = AMULET_CHAR;
@@ -732,7 +737,7 @@ void pickUpItemAt(short x, short y) {
 
 
 
-	if (numberOfItemsInPack() < MAX_PACK_ITEMS || (theItem->category & GOLD) || itemWillStackWithPack(theItem)) {
+	if (numberOfItemsInPack() < MAX_PACK_ITEMS || (theItem->category & GOLD) || (theItem->category & POWER) || itemWillStackWithPack(theItem)) {
 		// remove from floor chain
 		pmap[x][y].flags &= ~ITEM_DETECTED;
 
@@ -746,6 +751,27 @@ void pickUpItemAt(short x, short y) {
 #else
 		removeItemFromChain(theItem, floorItems);
 #endif
+
+		if (theItem->category & POWER) {
+			// find wand of empowerment
+			item * theWand;
+			for (theWand = packItems->nextItem; theWand != NULL; theWand = theWand->nextItem) {
+				if ( (theWand->category & WAND) && (theWand->kind & WAND_EMPOWERMENT) ) {
+					break;
+				}
+			}
+			if(theWand!=NULL) {
+				theWand->charges += theItem->quantity;
+				sprintf(buf, "as you stand in the magical field, your wand of empowerment vibrates.");
+			}
+			else {
+				sprintf(buf, "as you stand in the magical field, it vanishes.");
+			}
+			messageWithColor(buf, &itemMessageColor, false);
+			deleteItem(theItem);
+			removeItemFrom(x, y); // triggers tiles with T_PROMOTES_ON_ITEM_PICKUP
+			return;
+		}
 
 		if (theItem->category & GOLD) {
 			rogue.gold += theItem->quantity;
@@ -1351,6 +1377,9 @@ void itemName(item *theItem, char *root, boolean includeDetails, boolean include
 		case GOLD:
 			sprintf(root, "gold piece%s", pluralization);
 			break;
+		case POWER:
+			sprintf(root, "magic field of empowerment%s", pluralization);
+			break;
 		case AMULET:
 			sprintf(root, "%sAmulet%s of Yendor%s", yellowEscapeSequence, pluralization, baseEscapeSequence);
 			break;
@@ -1653,6 +1682,9 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 				break;
 			case GOLD:
 				sprintf(buf2, "A pile of %i shining gold coins.", theItem->quantity);
+				break;
+			case POWER:
+				sprintf(buf2, "A powerful magical field, left by an empowered monster.", theItem->quantity);
 				break;
 			default:
 				break;

@@ -420,6 +420,9 @@ void initializeRogue(unsigned long seed) {
 	theItem = generateItem(FOOD, RATION);
 	theItem = addItemToPack(theItem);
 
+	theItem = generateItem(WAND, WAND_EMPOWERMENT);
+	theItem = addItemToPack(theItem);
+
 	theItem = generateItem(WEAPON, DAGGER);
 	theItem->enchant1 = theItem->enchant2 = 0;
 	theItem->flags &= ~(ITEM_CURSED | ITEM_RUNIC);

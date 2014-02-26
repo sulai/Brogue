@@ -165,6 +165,9 @@ void describedItemCategory(short theCategory, char *buf) {
 		case GOLD:
 			strcpy(buf, "a pile of gold");
 			break;
+		case POWER:
+			strcpy(buf, "a magical field of power");
+			break;
 		default:
 			strcpy(buf, "something strange");
 			break;
