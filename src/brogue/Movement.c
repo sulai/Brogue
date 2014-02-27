@@ -1801,20 +1801,23 @@ boolean explore(short frameDelay) {
 }
 
 boolean pickExploreTarget(short *target) {
-	short i, j, newX, newY, distance, oldDistance, shortestDistance;
+    short i, j, newX, newY, distance, oldDistance, shortestDistance;
     boolean previouslyTargettingItem;
-	item *theItem;
+    item *theItem = NULL;
+    oldDistance = 0;
     newX = newY = -1;
     shortestDistance = 30000;
 
-    theItem = itemAtLoc(target[0], target[1]);
+    if (target[0] != -1) {
+        theItem = itemAtLoc(target[0], target[1]);
+	oldDistance = playerPathingMap[target[0]][target[1]];
+    }
     previouslyTargettingItem = theItem;
-    oldDistance = target[0] == -1 ? 0 : playerPathingMap[target[0]][target[1]];
 
-	for (i=0; i<DCOLS; i++) {
-		for (j=0; j<DROWS; j++) {
+    for (i=0; i<DCOLS; i++) {
+        for (j=0; j<DROWS; j++) {
 
-            distance = playerPathingMap[i][j];
+	    distance = playerPathingMap[i][j];
 
             if  (pmap[i][j].flags & DISCOVERED
                  && distance > oldDistance
@@ -1834,8 +1837,13 @@ boolean pickExploreTarget(short *target) {
                     shortestDistance = distance;
                 }
             }
-		}
 	}
+    }
+
+    if (target[0] == -1 && newX == -1) {
+        newX = rogue.downLoc[0];
+        newY = rogue.downLoc[1];
+    }
 
     if (newX != -1) {
         target[0] = newX;
