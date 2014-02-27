@@ -1548,7 +1548,14 @@ void killCreature(creature *decedent, boolean administrativeDeath) {
 			makeMonsterDropItem(decedent);
 		}
 	}
-	
+
+	if (decedent->totalPowerCount>0) {
+		item * powerItem = generateItem(POWER, 0);
+		powerItem->quantity = decedent->totalPowerCount;
+		decedent->carriedItem = powerItem;
+		makeMonsterDropItem(decedent);
+	}
+
 	decedent->bookkeepingFlags |= MONST_IS_DYING;
 	
 	if (!administrativeDeath && (decedent->info.abilityFlags & MA_DF_ON_DEATH)) {
