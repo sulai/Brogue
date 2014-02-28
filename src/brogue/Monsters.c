@@ -468,6 +468,9 @@ creature *cloneMonster(creature *monst, boolean announce, boolean placeClone) {
 	newMonst->carriedItem = NULL;
 	newMonst->carriedMonster = parentMonst;
 	newMonst->ticksUntilTurn = 101;
+	newMonst->absoluteTurnFreed = monst->absoluteTurnFreed;	// clone ally knows player as long as the original
+	newMonst->totalPowerCount = monst->totalPowerCount/2;   // empowerment energy splits between clones
+	monst->totalPowerCount -= newMonst->totalPowerCount;
     if (!(monst->creatureState == MONSTER_ALLY)) {
         newMonst->bookkeepingFlags &= ~MONST_TELEPATHICALLY_REVEALED;
     }
