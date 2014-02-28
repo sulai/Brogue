@@ -173,7 +173,7 @@ item *makeItemInto(item *theItem, unsigned long itemCategory, short itemKind) {
 					}
 				}
 			}
-			if (itemKind == DART || itemKind == INCENDIARY_DART || itemKind == JAVELIN) {
+			if (itemKind == DART || itemKind == INCENDIARY_DART || itemKind == JAVELIN || itemKind == ARROW) {
 				if (itemKind == INCENDIARY_DART) {
 					theItem->quantity = rand_range(3, 6);
 				} else {
@@ -1704,6 +1704,13 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 
 		case WEAPON:
 		case ARMOR:
+
+			if (theItem->kind==ARROW && rogue.weapon->kind==BOW) {
+				strcpy(buf2, "\n\nAccuracy and Damage completely depend on your bow. ");
+				strcat(buf, buf2);
+				break;
+			}
+
 			// enchanted? strength modifier?
 			if ((theItem->flags & ITEM_IDENTIFIED) || rogue.playbackOmniscience) {
 				if (theItem->enchant1) {
@@ -1797,8 +1804,12 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 					}
 					accuracyChange	= (new * 100 / current) - 100 + FLOAT_FUDGE;
 					damageChange	= (newDamage * 100 / currentDamage) - 100 + FLOAT_FUDGE;
-					sprintf(buf2, "Wielding the %s%s will %s your current accuracy by %s%i%%%s, and will %s your current damage by %s%i%%%s. ",
-							theName,
+					if(theItem->kind==BOW)
+						strcpy(buf3, "Arrows shot with this bow");
+					else
+						sprintf(buf3, "Wielding or throwing the %s", theName);
+					sprintf(buf2, "%s%s will %s your current accuracy by %s%i%%%s, and will %s your current damage by %s%i%%%s. ",
+							buf3,
 							((theItem->flags & ITEM_IDENTIFIED) || rogue.playbackOmniscience) ? "" : ", assuming it has no hidden properties,",
 							(((short) accuracyChange) < 0) ? "decrease" : "increase",
                             (((short) accuracyChange) < 0) ? badColorEscape : (accuracyChange > 0 ? goodColorEscape : ""),
@@ -5295,21 +5306,40 @@ boolean hitMonsterWithProjectileWeapon(creature *thrower, creature *monst, item 
 	}
 
 	if (thrower == &player) {
-		equippedWeapon = rogue.weapon;
-		equipItem(theItem, true);
-		thrownWeaponHit = attackHit(&player, monst);
-		if (equippedWeapon) {
-			equipItem(equippedWeapon, true);
-		} else {
-			unequipItem(theItem, true);
+		if(theItem->kind==ARROW && rogue.weapon->kind==BOW) {
+			// the bow determines accuracy
+			thrownWeaponHit = attackHit(&player, monst);
+		}
+		if(theItem->kind==BOW) {
+			// bow never hits
+			thrownWeaponHit = false;
+		}
+		else {
+			equippedWeapon = rogue.weapon;
+			equipItem(theItem, true);
+			thrownWeaponHit = attackHit(&player, monst);
+			if (equippedWeapon) {
+				equipItem(equippedWeapon, true);
+			} else {
+				unequipItem(theItem, true);
+			}
 		}
 	} else {
 		thrownWeaponHit = attackHit(thrower, monst);
 	}
 
 	if (thrownWeaponHit) {
-		damage = (monst->info.flags & MONST_IMMUNE_TO_WEAPONS ? 0 :
-				  randClump(theItem->damage)) * pow(WEAPON_ENCHANT_DAMAGE_FACTOR, netEnchant(theItem));
+
+		if( monst->info.flags & MONST_IMMUNE_TO_WEAPONS ) {
+			damage = 0;
+		}
+		if(theItem->kind==ARROW && rogue.weapon->kind==BOW) {
+			// in case of arrows, the bow determines damage
+			damage = randClump(rogue.weapon->damage) * pow(WEAPON_ENCHANT_DAMAGE_FACTOR, netEnchant(rogue.weapon));
+		}
+		else {
+			damage = randClump(theItem->damage) * pow(WEAPON_ENCHANT_DAMAGE_FACTOR, netEnchant(theItem));
+		}
 
 		if (monst == &player) {
 			applyArmorRunicEffect(armorRunicString, thrower, &damage, false);
@@ -5338,6 +5368,10 @@ boolean hitMonsterWithProjectileWeapon(creature *thrower, creature *monst, item 
         moralAttack(thrower, monst);
 		if (armorRunicString[0]) {
 			message(armorRunicString, false);
+		}
+		if(theItem->kind==ARROW) {
+			theItem->flags &= ~ITEM_PLAYER_AVOIDS; // Don't avoid thrown weapons that missed.
+			return false;
 		}
 		return true;
 	} else {
@@ -5408,7 +5442,7 @@ void throwItem(item *theItem, creature *thrower, short targetLoc[2], short maxDi
                     && theItem->kind != INCENDIARY_DART
                     && hitMonsterWithProjectileWeapon(thrower, monst, theItem)) {
 
-                    if(theItem->kind == DART || theItem->kind == JAVELIN)
+                    if(theItem->kind == DART || theItem->kind == JAVELIN || theItem->kind == ARROW)
                         return;
                 }
                 else
@@ -5611,6 +5645,7 @@ void throwCommand(item *theItem) {
 			theName);
 	temporaryMessage(buf, false);
 	maxDistance = (12 + 2 * max(rogue.strength - player.weaknessAmount - 12, 2));
+    if(theItem->kind==ARROW) maxDistance*=2;
 	autoTarget = (theItem->category & (WEAPON | POTION)) ? true : false;
 	if (chooseTarget(zapTarget, maxDistance, true, autoTarget, false, false)) {
         if ((theItem->flags & ITEM_EQUIPPED) && theItem->quantity <= 1) {

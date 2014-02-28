@@ -2119,6 +2119,10 @@ const itemTable weaponTable[NUMBER_WEAPON_KINDS] = {
 	{"dart",				"", "",	0,	15,			10,	{2,	4,	1},		true, false, "These simple metal spikes are weighted to fly true and sting their prey with a flick of the wrist. "},
 	{"incendiary dart",		"", "",	10, 25,			12,	{1,	2,	1},		true, false, "The spike on each of these darts is designed to pin it to its target while the unstable compounds strapped to its length burst into brilliant flames. "},
 	{"javelin",				"", "",	10, 40,			15,	{3, 11, 3},		true, false, "This length of metal is weighted to keep the spike at its tip foremost as it sails through the air. "},
+
+	{"bow",					"", "", 10, 440,		16, {3,	8,	5},		true, false, "This bow is a master piece of craftmanship. The string is strong and durable. You need arrows to use that bow. "},
+	{"arrow",				"", "",	10, 110,		10,	{1, 3,  1},		true, false, "These arrows are reinforced and are likely to survive impact. You need to equip a bow to shoot them. "},
+
 };
 
 const itemTable armorTable[NUMBER_ARMOR_KINDS] = {

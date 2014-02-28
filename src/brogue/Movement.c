@@ -807,6 +807,13 @@ boolean playerMoves(short direction) {
                     return false;
                 }
 
+				if (rogue.weapon->kind == BOW) {
+					strcpy(buf, "you decide against attacking with your bow");
+					combatMessage(buf, 0);
+					// playerTurnEnded();
+					return false;
+				}
+
                 if (player.status[STATUS_NAUSEOUS]) {
                     if (!alreadyRecorded) {
                         recordKeystroke(directionKeys[initialDirection], false, false);
