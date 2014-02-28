@@ -689,6 +689,10 @@ enum weaponKind {
 	DART,
 	INCENDIARY_DART,
 	JAVELIN,
+
+	BOW,
+	ARROW,
+
 	NUMBER_WEAPON_KINDS
 };
 
