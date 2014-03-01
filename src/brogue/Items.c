@@ -5052,7 +5052,7 @@ boolean hitMonsterWithProjectileWeapon(creature *thrower, creature *monst, item 
 		if( monst->info.flags & MONST_IMMUNE_TO_WEAPONS ) {
 			damage = 0;
 		}
-		if(theItem->kind==ARROW && rogue.weapon->kind==BOW) {
+		if(theItem->kind==ARROW && rogue.weapon && rogue.weapon->kind==BOW) {
 			// in case of arrows, the bow determines damage
 			damage = randClump(rogue.weapon->damage) * pow(WEAPON_ENCHANT_DAMAGE_FACTOR, netEnchant(rogue.weapon));
 		}
