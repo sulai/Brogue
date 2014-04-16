@@ -1510,7 +1510,7 @@ void itemDetails(char *buf, item *theItem) {
 		"the enemy will be confused",
 		"the enemy will be flung",
 		"[slaying]", // never used
-		"the enemy's strength will be sapped",
+		"the enemy's strength will be weakened",
 		"the enemy will be healed",
 		"the enemy will be cloned"
 	};
@@ -1860,7 +1860,7 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 										nextLevelState = weaponForceDistance((float) (enchant + enchantIncrement(theItem)));
 										break;
 									case W_ENERVATION:
-										sprintf(buf2, " by %i points. ",
+										sprintf(buf2, " by %i. ",
 												weaponWeaknessCount(enchant));
 										strcat(buf, buf2);
 										nextLevelState = weaponWeaknessCount((float) (enchant + enchantIncrement(theItem)));
