@@ -525,7 +525,7 @@ void specialHit(creature *attacker, creature *defender, short damage) {
         && damage > 0
         && !(defender->info.flags & MONST_INANIMATE)) {
         
-		weaken(defender, 300);
+		weaken(defender, 300, 1);
 	}
 }
 
@@ -669,7 +669,7 @@ void magicWeaponHit(creature *defender, item *theItem, boolean backstabbed) {
 	char buf[DCOLS*3], monstName[DCOLS], theItemName[DCOLS];
 	
 	color *effectColors[NUMBER_WEAPON_RUNIC_KINDS] = {&white, &black,
-		&yellow, &pink, &green, &confusionGasColor, NULL, NULL, &darkRed, &rainbow};
+		&yellow, &pink, &green, &confusionGasColor, NULL, NULL, NULL, &darkRed, &rainbow};
 	//	W_SPEED, W_QUIETUS, W_PARALYSIS, W_MULTIPLICITY, W_SLOWING, W_CONFUSION, W_FORCE, W_SLAYING, W_MERCY, W_PLENTY
 	short chance, i;
 	float enchant;
@@ -818,6 +818,9 @@ void magicWeaponHit(creature *defender, item *theItem, boolean backstabbed) {
 			case W_FORCE:
                 forceWeaponHit(defender, theItem);
 				break;
+			case W_ENERVATION:
+				weaken(defender, 300, weaponWeaknessCount(enchant));
+ 		                break; 
 			case W_MERCY:
 				heal(defender, 50);
 				break;
