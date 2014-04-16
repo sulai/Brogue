@@ -699,8 +699,9 @@ enum weaponEnchants {
 	W_MULTIPLICITY,
 	W_SLOWING,
 	W_CONFUSION,
-    W_FORCE,
+	W_FORCE,
 	W_SLAYING,
+	W_ENERVATION,
 	W_MERCY,
 	NUMBER_GOOD_WEAPON_ENCHANT_KINDS = W_MERCY,
 	W_PLENTY,
@@ -1141,6 +1142,7 @@ boolean cellHasTerrainFlag(short x, short y, unsigned long flagMask);
 
 #define weaponParalysisDuration(enchant)	(max(2, (int) (2 + ((enchant) / 2) + FLOAT_FUDGE)))
 #define weaponConfusionDuration(enchant)	(max(3, (int) (1.5 * (enchant) + FLOAT_FUDGE)))
+#define weaponWeaknessCount(enchant)        (clamp((int) ((enchant) / 3 + FLOAT_FUDGE), 1, 3))
 #define weaponForceDistance(enchant)		(max(4, (((int) (enchant + FLOAT_FUDGE)) * 2 + 2))) // Depends on definition of staffBlinkDistance() above.
 #define weaponSlowDuration(enchant)			(max(3, (int) (((enchant) + 2) * ((enchant) + 2) / 3 + FLOAT_FUDGE)))
 #define weaponImageCount(enchant)			(clamp((int) ((enchant) / 3 + FLOAT_FUDGE), 1, 7))
@@ -2703,7 +2705,7 @@ extern "C" {
     short monsterAccuracyAdjusted(const creature *monst);
     float monsterDamageAdjustmentAmount(const creature *monst);
     short monsterDefenseAdjusted(const creature *monst);
-	void weaken(creature *monst, short maxDuration);
+	void weaken(creature *monst, short maxDuration, short amount);
 	void slow(creature *monst, short turns);
 	void haste(creature *monst, short turns);
 	void heal(creature *monst, short percent);
