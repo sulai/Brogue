@@ -3917,7 +3917,8 @@ short printMonsterInfo(creature *monst, short y, boolean dim, boolean highlight)
 		"Darkened",
 		"Lifespan",
 		"Shielded",
-        "Invisible",
+		"Invisible",
+		"Petrifying", 
 	};
 	
 	if (y >= ROWS - 1) {
