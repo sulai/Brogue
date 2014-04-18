@@ -589,29 +589,56 @@ short runicWeaponChance(item *theItem, boolean customEnchantLevel, float enchant
 }
 
 void forceWeaponHit(creature *defender, item *theItem) {
+    float e = netEnchant(theItem);
+
+    short targetLoc[2];
+    targetLoc[0] = defender->xLoc;
+    targetLoc[1] = defender->yLoc;
+
+    short originLoc[2];
+    originLoc[0] = player.xLoc;
+    originLoc[1] = player.yLoc;
+
+    forcePush(originLoc, targetLoc, true, e);
+}
+
+void forcePush(short originLoc[2], short targetLoc[2], boolean byPlayer, float enchant) {
 	short oldLoc[2], newLoc[2], forceDamage;
 	char buf[DCOLS*3], buf2[COLS], monstName[DCOLS];
     creature *otherMonster = NULL;
+    creature *defender = NULL;
     boolean knowFirstMonsterDied = false;
-    
+
+    if (pmap[targetLoc[0]][targetLoc[1]].flags & (HAS_MONSTER | HAS_PLAYER)) {
+            defender = monsterAtLoc(targetLoc[0], targetLoc[1]);
+            monsterName(monstName, defender, true);
+        } else {
+            return;
+        }
+
+    boolean toPlayer = (defender == &player);
+
     monsterName(monstName, defender, true);
-    
-    oldLoc[0] = defender->xLoc;
-    oldLoc[1] = defender->yLoc;
-    newLoc[0] = defender->xLoc + (defender->xLoc - player.xLoc);
-    newLoc[1] = defender->yLoc + (defender->yLoc - player.yLoc);
+
+    oldLoc[0] = targetLoc[0];
+    oldLoc[1] = targetLoc[1];
+    newLoc[0] = defender->xLoc + (defender->xLoc - originLoc[0]);
+    newLoc[1] = defender->yLoc + (defender->yLoc - originLoc[1]);
+
     if (canDirectlySeeMonster(defender)
         && !cellHasTerrainFlag(newLoc[0], newLoc[1], T_OBSTRUCTS_PASSABILITY | T_OBSTRUCTS_VISION)
         && !(pmap[newLoc[0]][newLoc[1]].flags & (HAS_MONSTER | HAS_PLAYER))) {
-        sprintf(buf, "you launch %s backward with the force of your blow", monstName);
+        if(byPlayer)
+            sprintf(buf, "you launch %s backward with the force of your blow", monstName);
+        else sprintf(buf, "%s %s launched into the air", monstName, toPlayer?"are":"is");
         buf[DCOLS] = '\0';
         combatMessage(buf, messageColorFromVictim(defender));
     }
-    zap(oldLoc, newLoc, BOLT_BLINKING, max(1, netEnchant(theItem) + FLOAT_FUDGE), false);
+    zap(oldLoc, newLoc, BOLT_BLINKING, max(1, enchant + FLOAT_FUDGE), false);
     if (!(defender->bookkeepingFlags & MONST_IS_DYING)
         && distanceBetween(oldLoc[0], oldLoc[1], defender->xLoc, defender->yLoc) > 0
-        && distanceBetween(oldLoc[0], oldLoc[1], defender->xLoc, defender->yLoc) < weaponForceDistance(netEnchant(theItem))) {
-        
+        && distanceBetween(oldLoc[0], oldLoc[1], defender->xLoc, defender->yLoc) < weaponForceDistance(enchant)) {
+
         if (pmap[defender->xLoc + newLoc[0] - oldLoc[0]][defender->yLoc + newLoc[1] - oldLoc[1]].flags & (HAS_MONSTER | HAS_PLAYER)) {
             otherMonster = monsterAtLoc(defender->xLoc + newLoc[0] - oldLoc[0], defender->yLoc + newLoc[1] - oldLoc[1]);
             monsterName(buf2, otherMonster, true);
@@ -619,12 +646,12 @@ void forceWeaponHit(creature *defender, item *theItem) {
             otherMonster = NULL;
             strcpy(buf2, tileCatalog[pmap[defender->xLoc + newLoc[0] - oldLoc[0]][defender->yLoc + newLoc[1] - oldLoc[1]].layers[highestPriorityLayer(defender->xLoc + newLoc[0] - oldLoc[0], defender->yLoc + newLoc[1] - oldLoc[1], true)]].description);
         }
-        
+
         forceDamage = distanceBetween(oldLoc[0], oldLoc[1], defender->xLoc, defender->yLoc);
-        
+
         if (!(defender->info.flags & MONST_IMMUNE_TO_WEAPONS)
             && inflictDamage(defender, forceDamage, &white, false)) {
-            
+
             if (canDirectlySeeMonster(defender)) {
                 knowFirstMonsterDied = true;
                 sprintf(buf, "%s %s on impact with %s",
@@ -636,18 +663,19 @@ void forceWeaponHit(creature *defender, item *theItem) {
             }
         } else {
             if (canDirectlySeeMonster(defender)) {
-                sprintf(buf, "%s slams against %s",
-                        monstName,
+                sprintf(buf, "%s slam%s against %s",
+                        monstName, toPlayer?"":"s",
                         buf2);
                 buf[DCOLS] = '\0';
                 combatMessage(buf, messageColorFromVictim(defender));
             }
         }
-        moralAttack(&player, defender);
-        
+        if(byPlayer)
+            moralAttack(&player, defender);
+
         if (otherMonster
             && !(defender->info.flags & MONST_IMMUNE_TO_WEAPONS)) {
-            
+
             if (inflictDamage(otherMonster, forceDamage, &white, false)) {
                 if (canDirectlySeeMonster(otherMonster)) {
                     sprintf(buf, "%s %s%s when %s slams into $HIMHER",
@@ -660,7 +688,8 @@ void forceWeaponHit(creature *defender, item *theItem) {
                     combatMessage(buf, messageColorFromVictim(otherMonster));
                 }
             }
-            moralAttack(&player, otherMonster);
+            if(byPlayer)
+                moralAttack(&player, otherMonster);
         }
     }
 }
@@ -1523,6 +1552,25 @@ void addPoison(creature *monst, short damage) {
     }
 }
 
+// Adds to the creatures petrification status
+void petrify(creature *victim, boolean current) {
+    if(current)
+    {
+        if (victim == &player) {
+            if(victim->status[STATUS_PETRIFYING] == 0)
+                message("you gaze at the medusa!", true);
+            messageWithColor("you feel your flesh turning to stone.", &badMessageColor, false);
+            if(victim->status[STATUS_PETRIFYING] == TURNS_TO_PETRIFY)
+                gameOver("Turned to stone", true);
+        }
+        victim->status[STATUS_PETRIFYING] = (victim->status[STATUS_PETRIFYING]) + 1;
+        victim->maxStatus[STATUS_PETRIFYING] = TURNS_TO_PETRIFY;
+    }
+    else{
+        victim->status[STATUS_PETRIFYING] = 0;
+        victim->maxStatus[STATUS_PETRIFYING] = 0;
+    }
+}
 
 // Removes the decedent from the screen and from the monster chain; inserts it into the graveyard chain; does NOT free the memory.
 // Use "administrativeDeath" if the monster is being deleted for administrative purposes, as opposed to dying as a result of physical actions.
