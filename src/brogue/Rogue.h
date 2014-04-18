@@ -785,6 +785,7 @@ enum boltType {
 	BOLT_HEALING,
 	BOLT_HASTE,
 	BOLT_SHIELDING,
+	BOLT_TELEKINETIC,
 	NUMBER_BOLT_KINDS
 };
 
@@ -883,9 +884,11 @@ enum monsterTypes {
 	MK_IMP,
 	MK_FURY,
 	MK_REVENANT,
+	MK_MEDUSA,
 	MK_TENTACLE_HORROR,
 	MK_GOLEM,
 	MK_DRAGON,
+	MK_MIND_FLAYER,
 	
 	MK_GOBLIN_CHIEFTAN,
 	MK_BLACK_JELLY,
@@ -967,6 +970,7 @@ enum tileFlags {
 };
 
 #define TURNS_FOR_FULL_REGEN				300
+#define TURNS_TO_PETRIFY                    		8
 #define STOMACH_SIZE						2150
 #define HUNGER_THRESHOLD					(STOMACH_SIZE - 1800)
 #define WEAK_THRESHOLD						150
@@ -1708,7 +1712,8 @@ enum statusEffects {
 	STATUS_DARKNESS,
 	STATUS_LIFESPAN_REMAINING,
 	STATUS_SHIELDED,
-    STATUS_INVISIBLE,
+	STATUS_INVISIBLE,
+	STATUS_PETRIFYING,
 	NUMBER_OF_STATUS_EFFECTS,
 };
 
@@ -1773,6 +1778,7 @@ enum monsterBehaviorFlags {
     MONST_GETS_TURN_ON_ACTIVATION   = Fl(28),   // monster never gets a turn, except when its machine is activated
     MONST_ALWAYS_USE_ABILITY        = Fl(29),   // monster will never fail to use special ability if eligible (no random factor)
     MONST_NO_POLYMORPH              = Fl(30),   // monster cannot result from a polymorph spell (liches and phoenixes)
+    MONST_INNATE_TELEPATH      = 2147483648,  // monster is always telepathic
 	
 	NEGATABLE_TRAITS				= (MONST_INVISIBLE | MONST_DEFEND_DEGRADE_WEAPON | MONST_IMMUNE_TO_WEAPONS | MONST_FLIES
 									   | MONST_FLITS | MONST_IMMUNE_TO_FIRE | MONST_REFLECT_4 | MONST_FIERY | MONST_MAINTAINS_DISTANCE),
@@ -1812,9 +1818,12 @@ enum monsterAbilityFlags {
     
     MA_ATTACKS_PENETRATE            = Fl(25),   // monster attacks all adjacent enemies, like an axe
     MA_ATTACKS_ALL_ADJACENT         = Fl(26),   // monster attacks penetrate one layer of enemies, like a spear
+    
+	MA_TELEKENETIC_BLAST 		= Fl(27), // pushes as a +4 weapon of force
+ 	MA_STONE_GAZE                	= Fl(28), // turns those who look at it to stone
 	
 	MAGIC_ATTACK					= (MA_CAST_HEAL | MA_CAST_HASTE | MA_CAST_PROTECTION | MA_CAST_NEGATION | MA_CAST_SPARK | MA_CAST_FIRE | MA_CAST_SUMMON
-									   | MA_CAST_SLOW | MA_CAST_DISCORD | MA_BREATHES_FIRE | MA_SHOOTS_WEBS | MA_ATTACKS_FROM_DISTANCE | MA_CAST_BECKONING),
+									   | MA_CAST_SLOW | MA_CAST_DISCORD | MA_BREATHES_FIRE | MA_SHOOTS_WEBS | MA_ATTACKS_FROM_DISTANCE | MA_CAST_BECKONING | MA_TELEKENETIC_BLAST),
 	SPECIAL_HIT						= (MA_HIT_HALLUCINATE | MA_HIT_STEAL_FLEE | MA_HIT_DEGRADE_ARMOR | MA_POISONS | MA_TRANSFERENCE | MA_CAUSES_WEAKNESS),
 	LEARNABLE_ABILITIES				= (MA_CAST_HEAL | MA_CAST_HASTE | MA_CAST_PROTECTION | MA_CAST_BLINK | MA_CAST_NEGATION | MA_CAST_SPARK | MA_CAST_FIRE
 									   | MA_CAST_SLOW | MA_CAST_DISCORD | MA_TRANSFERENCE | MA_CAUSES_WEAKNESS),
@@ -2703,6 +2712,7 @@ extern "C" {
     short monsterAccuracyAdjusted(const creature *monst);
     float monsterDamageAdjustmentAmount(const creature *monst);
     short monsterDefenseAdjusted(const creature *monst);
+    void forcePush(short originLoc[2], short targetLoc[2], boolean byPlayer, float enchant); 
 	void weaken(creature *monst, short maxDuration);
 	void slow(creature *monst, short turns);
 	void haste(creature *monst, short turns);
