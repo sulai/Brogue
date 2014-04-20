@@ -154,6 +154,8 @@ boolean monsterRevealed(creature *monst) {
         return true;
     } else if (monst->status[STATUS_ENTRANCED]) {
         return true;
+    } else if (monst->info.flags & MONST_INNATE_TELEPATH) {
+ 	return true;
     } else if (player.status[STATUS_TELEPATHIC] && !(monst->info.flags & MONST_INANIMATE)) {
         return true;
     }
@@ -1670,6 +1672,8 @@ void decrementMonsterStatus(creature *monst) {
                     refreshDungeonCell(monst->xLoc, monst->yLoc);
                 }
                 break;
+            case STATUS_PETRIFYING:
+ 		break; 
             default:
                 if (monst->status[i]) {
                     monst->status[i]--;
@@ -2443,7 +2447,7 @@ boolean monstUseMagic(creature *monst) {
 	
 	// weak direct damage spells against enemies:
 	
-	if (!monst->status[STATUS_CONFUSED] && monst->info.abilityFlags & (MA_CAST_FIRE | MA_CAST_SPARK)) {
+	if (!monst->status[STATUS_CONFUSED] && monst->info.abilityFlags & (MA_CAST_FIRE | MA_CAST_SPARK | MA_TELEKENETIC_BLAST)) {
 		CYCLE_MONSTERS_AND_PLAYERS(target) {
 			if (monstersAreEnemies(monst, target)
 				&& monst != target
@@ -2489,6 +2493,22 @@ boolean monstUseMagic(creature *monst) {
                         combatMessage(buf, 0);
                     }
                     zap(originLoc, targetLoc, BOLT_LIGHTNING, 1, false);
+                    if (player.currentHP <= 0) {
+                        monsterName(monstName, monst, false);
+                        gameOver(monsterCatalog[monst->info.monsterID].monsterName, false);
+                    }
+                    return true;
+                }
+                
+                if ((monst->info.abilityFlags & MA_TELEKENETIC_BLAST)
+                    && (alwaysUse || rand_percent(50))) {
+
+                    if (canDirectlySeeMonster(monst)) {
+                        monsterName(monstName, monst, true);
+                        sprintf(buf, "%s seethes with telekinetic energy", monstName);
+                        combatMessage(buf, 0);
+                    }
+                    zap(originLoc, targetLoc, BOLT_TELEKINETIC, 1, false);
                     if (player.currentHP <= 0) {
                         monsterName(monstName, monst, false);
                         gameOver(monsterCatalog[monst->info.monsterID].monsterName, false);
@@ -3050,6 +3070,30 @@ void monstersTurn(creature *monst) {
 			return;
 		}
 		if (scentMap[x][y] == 0) {
+			if((monst->info.flags & MONST_ALWAYS_HUNTING) && !(monst->info.flags & MONST_IMMOBILE))
+			    {
+			        //mindflayer stuff
+			        //is the player missing his map?
+		        if (!player.mapToMe) {
+		            player.mapToMe = allocGrid();
+		            fillGrid(player.mapToMe, 0);
+		            calculateDistances(player.mapToMe, player.xLoc, player.yLoc, 0, monst, true, false);
+		        }
+		
+			        // follow the map.
+		        dir = nextStep(player.mapToMe, monst->xLoc, monst->yLoc, monst, true);
+		        targetLoc[0] = monst->xLoc + nbDirs[dir][0];
+		        targetLoc[1] = monst->yLoc + nbDirs[dir][1];
+		        if (!moveMonsterPassivelyTowards(monst, targetLoc, (monst->creatureState != MONSTER_ALLY))) {
+		            // monster is blocking the way
+		            dir = randValidDirectionFrom(monst, monst->xLoc, monst->yLoc, true);
+		            if (dir != -1) {
+		                targetLoc[0] = monst->xLoc + nbDirs[dir][0];
+		                targetLoc[1] = monst->yLoc + nbDirs[dir][1];
+		                moveMonsterPassivelyTowards(monst, targetLoc, (monst->creatureState != MONSTER_ALLY));
+		            }
+		        }
+			    }
 			return;
 		}
 		

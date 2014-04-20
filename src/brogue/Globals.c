@@ -1462,12 +1462,16 @@ creatureType monsterCatalog[NUMBER_MONSTER_KINDS] = {
 		(MONST_NEVER_SLEEPS | MONST_FLIES)},
 	{0, "revenant",		'R',	&ectoplasmColor,30,		0,		200,	{15, 20, 5},	0,	100,	100,	DF_ECTOPLASM_BLOOD,	0,	0,		0,
 		(MONST_IMMUNE_TO_WEAPONS)},
-	{0, "tentacle horror",'H',	&centipedeColor,120,	95,     225,	{25, 35, 3},	1,	100,	100,	DF_PURPLE_BLOOD,0,		0,		0,			(0)},
+	{0, "medusa", 'M',	&darPriestessColor,     40,	    60,		120,	{4, 12, 1},		20,	100,	100,	DF_GREEN_BLOOD,   0,   0,	0,
+		(MONST_MAINTAINS_DISTANCE | MONST_CARRY_ITEM_25 | MONST_FEMALE), (MA_POISONS | MA_STONE_GAZE)},
+    	{0, "tentacle horror",'H',	&centipedeColor,120,	95,     225,	{25, 35, 3},	1,	100,	100,	DF_PURPLE_BLOOD,0,		0,		0,			(0)},
 	{0, "golem",		'G',	&gray,			400,	70,     225,	{4, 8, 1},		0,	100,	100,	DF_RUBBLE_BLOOD,0,		0,		0,
 		(MONST_REFLECT_4 | MONST_DIES_IF_NEGATED)},
 	{0, "dragon",		'D',	&dragonColor,	150,	90,     250,	{25, 50, 4},	20,	50,		200,	DF_GREEN_BLOOD,	0,		0,		0,
 		(MONST_IMMUNE_TO_FIRE | MONST_CARRY_ITEM_100), (MA_BREATHES_FIRE | MA_ATTACKS_ALL_ADJACENT)},
-	
+    	{0, "mind flayer",		'M',	&purple,	50,	80,     200,	{12, 20, 2},	20,	100,	100,	DF_PURPLE_BLOOD,	0,		0,		0,
+		(MONST_REFLECT_4 | MONST_ALWAYS_HUNTING | MONST_CARRY_ITEM_25 | MONST_INNATE_TELEPATH | MONST_CAST_SPELLS_SLOWLY), (MA_CAST_DISCORD | MA_CAST_NEGATION | MA_TELEKENETIC_BLAST)},
+
 	// bosses
 	{0, "goblin warlord",'g',	&blue,			30,		17,		100,	{3, 6, 1},		20,	100,	100,	DF_RED_BLOOD,	0,		0,		0,
 		(MONST_MAINTAINS_DISTANCE | MONST_CARRY_ITEM_25), (MA_CAST_SUMMON | MA_ATTACKS_PENETRATE)},
@@ -1666,6 +1670,9 @@ const monsterWords monsterText[NUMBER_MONSTER_KINDS] = {
 	{"This unholy specter stalks the deep places of the earth without fear, impervious to all conventional attacks.",
 		"desecrating", "Desecrating",
 		{"hits", {0}}},
+	{"Once a beautiful maiden, this gorgon was cursed by the gods and has fled deep within the sunless dungeon. Her hair is a tangle of poisonous asps and her scaly visage is so hideous that it will turn any who gazes at her to stone!",
+		"studying", "Studying",
+		{"bites", "stings", {0}}},
 	{"This seething, towering nightmare of fleshy tentacles slinks through the bowels of the world. The tentacle horror's incredible strength and regeneration make $HIMHER one of the most fearsome creatures of the dungeon.",
 		"sucking on", "Consuming",
 		{"slaps", "batters", "crushes", {0}}},
@@ -1675,6 +1682,9 @@ const monsterWords monsterText[NUMBER_MONSTER_KINDS] = {
 	{"An ancient serpent of the world's deepest places, the dragon's immense form belies its lightning-quick speed and testifies to $HISHER breathtaking strength. An undying furnace of white-hot flames burns within $HISHER scaly hide, and few could withstand a single moment under $HISHER infernal lash.",
 		"consuming", "Consuming",
 		{"claws", "tail-whips", "bites", {0}}},
+	{"A nightmarish tentacled sorcerer of incredible psychic power, the mind flayer seeks to devour the brains of $HISHER prey.  With a telepathic awareness that extends throughout the astral plane, this monster is almost impossible to escape.",
+		"extracting the brain of", "Extracting",
+		{"chokes", "lashes", "crushes", {0}}},
 	
 	{"Taller, stronger and smarter than other goblins, the warlord commands the loyalty of $HISHER kind and can summon them into battle.",
 		"chanting over", "Chanting",
@@ -1826,6 +1836,9 @@ const hordeType hordeCatalog[NUMBER_HORDES] = {
     {MK_KRAKEN,			1,		{MK_KRAKEN},							{{5, 10, 2}},					30,		DEEPEST_LEVEL-1,    10,		DEEP_WATER},
 	{MK_TENTACLE_HORROR,2,		{MK_TENTACLE_HORROR, MK_REVENANT},		{{1, 3, 1}, {2, 4, 1}},			32,		DEEPEST_LEVEL-1,    2},
 	{MK_DRAGON,			1,		{MK_DRAGON},							{{3, 5, 1}},					34,		DEEPEST_LEVEL-1,    2},
+	{MK_MEDUSA,         0,		{0},									{{0}},							16,		23,		10},
+	{MK_MIND_FLAYER,         0,		{0},									{{0}},							25,		DEEPEST_LEVEL-1,		5},
+
 	
 	// summons
 	{MK_GOBLIN_CONJURER,1,		{MK_SPECTRAL_BLADE},					{{3, 5, 1}},					0,		0,		10,		0,			0,					HORDE_IS_SUMMONED | HORDE_DIES_ON_LEADER_DEATH},
@@ -2279,6 +2292,7 @@ const color *boltColors[NUMBER_BOLT_KINDS] = {
 	&darkRed,			// healing
 	&orange,			// haste
 	&shieldingColor,	// shielding
+	&blue,              //telekinesis 
 };
 
 const char monsterBehaviorFlagDescriptions[32][COLS] = {
@@ -2309,8 +2323,11 @@ const char monsterBehaviorFlagDescriptions[32][COLS] = {
 	"is animated purely by magic",				// MONST_DIES_IF_NEGATED
 	"",                                         // MONST_MALE
 	"",                                         // MONST_FEMALE
-    "",                                         // MONST_NOT_LISTED_IN_SIDEBAR
-    "moves only when activated",                // MONST_GETS_TURN_ON_ACTIVATION
+	"",                                         // MONST_NOT_LISTED_IN_SIDEBAR
+	"moves only when activated",                // MONST_GETS_TURN_ON_ACTIVATION
+	"",                                // MONST_ALWAYS_USE_ABILITY
+	"",                                // MONST_NO_POLYMORPH
+ 	"is innately telepathic",                // MONST_INNATE_TELEPATH 
 };
 
 const char monsterAbilityFlagDescriptions[33][COLS] = {
@@ -2342,6 +2359,9 @@ const char monsterAbilityFlagDescriptions[33][COLS] = {
     
     "attacks up to two opponents in a line",    // MA_ATTACKS_PENETRATE
     "attacks all adjacent opponents simultaneously", // MA_ATTACKS_ALL_ADJACENT
+    
+	"can telekinetically hurl $HISHER enemies",                // MA_TELEKENETIC_BLAST
+ 	"can turn enemies to stone with $HISHER gaze", // MA_STONE_GAZE 
 };
 
 const char monsterBookkeepingFlagDescriptions[32][COLS] = {

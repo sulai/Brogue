@@ -2198,6 +2198,16 @@ void playerTurnEnded() {
 			}
 		}
 		
+		//finish medusa stuff here
+		boolean gazed = false;
+		for (monst = monsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
+			if ((monst->info.abilityFlags & MA_STONE_GAZE) && !player.status[STATUS_HALLUCINATING] && canDirectlySeeMonster(monst)) {
+                		gazed = true;
+				break;
+			}
+		}
+        	petrify(&player, gazed);
+		
 		displayCombatText();
 		
 		if (player.status[STATUS_PARALYZED]) {
