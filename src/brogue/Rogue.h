@@ -701,6 +701,7 @@ enum weaponEnchants {
 	W_CONFUSION,
     W_FORCE,
 	W_SLAYING,
+	W_ENERVATION,
 	W_MERCY,
 	NUMBER_GOOD_WEAPON_ENCHANT_KINDS = W_MERCY,
 	W_PLENTY,
@@ -1145,6 +1146,7 @@ boolean cellHasTerrainFlag(short x, short y, unsigned long flagMask);
 
 #define weaponParalysisDuration(enchant)	(max(2, (int) (2 + ((enchant) / 2) + FLOAT_FUDGE)))
 #define weaponConfusionDuration(enchant)	(max(3, (int) (1.5 * (enchant) + FLOAT_FUDGE)))
+#define weaponWeaknessCount(enchant)        (clamp((int) ((enchant) / 3 + FLOAT_FUDGE), 1, 3))
 #define weaponForceDistance(enchant)		(max(4, (((int) (enchant + FLOAT_FUDGE)) * 2 + 2))) // Depends on definition of staffBlinkDistance() above.
 #define weaponSlowDuration(enchant)			(max(3, (int) (((enchant) + 2) * ((enchant) + 2) / 3 + FLOAT_FUDGE)))
 #define weaponImageCount(enchant)			(clamp((int) ((enchant) / 3 + FLOAT_FUDGE), 1, 7))
@@ -1712,7 +1714,7 @@ enum statusEffects {
 	STATUS_DARKNESS,
 	STATUS_LIFESPAN_REMAINING,
 	STATUS_SHIELDED,
-	STATUS_INVISIBLE,
+    STATUS_INVISIBLE,
 	STATUS_PETRIFYING,
 	NUMBER_OF_STATUS_EFFECTS,
 };
@@ -1818,7 +1820,7 @@ enum monsterAbilityFlags {
     
     MA_ATTACKS_PENETRATE            = Fl(25),   // monster attacks all adjacent enemies, like an axe
     MA_ATTACKS_ALL_ADJACENT         = Fl(26),   // monster attacks penetrate one layer of enemies, like a spear
-    
+	
 	MA_TELEKENETIC_BLAST 		= Fl(27), // pushes as a +4 weapon of force
  	MA_STONE_GAZE                	= Fl(28), // turns those who look at it to stone
 	
