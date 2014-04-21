@@ -4297,8 +4297,14 @@ boolean zap(short originLoc[2], short targetLoc[2], enum boltType bolt, short bo
 			}
 			break;
 		case BOLT_TELEKINETIC:
- 			inflictDamage(monst, staffDamage(6), &blue, false);
- 			forcePush(originLoc, targetLoc, false, 3);
+ 			if(monst)
+ 			{
+ 				inflictDamage(monst, staffDamage(6), &blue, false);
+ 				if(x == originLoc[0] && y == originLoc[1])
+ 					forcePush(targetLoc, originLoc, false, 3);//mindflayer pushed
+ 				else
+ 					forcePush(originLoc, targetLoc, false, 3);//player pushed
+ 			}
  			break;
 		default:
 			break;
