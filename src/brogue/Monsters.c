@@ -3076,15 +3076,15 @@ void monstersTurn(creature *monst) {
 			        //rebuild the player's map
 		            	player.mapToMe = allocGrid();
 		            	fillGrid(player.mapToMe, 0);
-		            	calculateDistances(player.mapToMe, player.xLoc, player.yLoc, 0, monst, true, false);
+		            	calculateDistances(player.mapToMe, player.xLoc, player.yLoc, 0, monst, true, true);
 		
 			        // follow the map.
-		        	dir = nextStep(player.mapToMe, monst->xLoc, monst->yLoc, monst, true);
+		        	dir = nextStep(player.mapToMe, monst->xLoc, monst->yLoc, monst, false);
 		        	targetLoc[0] = monst->xLoc + nbDirs[dir][0];
 		        	targetLoc[1] = monst->yLoc + nbDirs[dir][1];
 		        	if (!moveMonsterPassivelyTowards(monst, targetLoc, (monst->creatureState != MONSTER_ALLY))) {
 		            		// monster is blocking the way
-		            		dir = randValidDirectionFrom(monst, monst->xLoc, monst->yLoc, true);
+		            		dir = randValidDirectionFrom(monst, monst->xLoc, monst->yLoc, false);
 		            		if (dir != -1) {
 		                		targetLoc[0] = monst->xLoc + nbDirs[dir][0];
 		                		targetLoc[1] = monst->yLoc + nbDirs[dir][1];
