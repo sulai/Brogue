@@ -625,6 +625,11 @@ void forcePush(short originLoc[2], short targetLoc[2], boolean byPlayer, float e
     oldLoc[1] = targetLoc[1];
     newLoc[0] = defender->xLoc + (defender->xLoc - originLoc[0]);
     newLoc[1] = defender->yLoc + (defender->yLoc - originLoc[1]);
+    
+    newLoc[0] = min(oldLoc[0] + 1, newLoc[0]);
+    newLoc[0] = max(oldLoc[0] - 1, newLoc[0]);
+    newLoc[1] = min(oldLoc[1] + 1, newLoc[1]);
+    newLoc[1] = max(oldLoc[1] - 1, newLoc[1]);
 
     if (canDirectlySeeMonster(defender)
         && !cellHasTerrainFlag(newLoc[0], newLoc[1], T_OBSTRUCTS_PASSABILITY | T_OBSTRUCTS_VISION)
