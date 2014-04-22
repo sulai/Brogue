@@ -525,7 +525,7 @@ void specialHit(creature *attacker, creature *defender, short damage) {
         && damage > 0
         && !(defender->info.flags & MONST_INANIMATE)) {
         
-		weaken(defender, 300, 1);
+		weaken(defender, 300);
 	}
 }
 
@@ -853,9 +853,6 @@ void magicWeaponHit(creature *defender, item *theItem, boolean backstabbed) {
 			case W_FORCE:
                 forceWeaponHit(defender, theItem);
 				break;
-			case W_ENERVATION:
-				weaken(defender, 300, weaponWeaknessCount(enchant));
- 		                break; 
 			case W_MERCY:
 				heal(defender, 50);
 				break;
