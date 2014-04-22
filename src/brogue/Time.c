@@ -2061,6 +2061,20 @@ void playerTurnEnded() {
 				rechargeItemsIncrementally(); // staffs recharge every so often
 				rogue.monsterSpawnFuse--; // monsters spawn in the level every so often
 				
+				//medusa
+		                boolean gazed = false;
+		                for (monst = monsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
+		                    if ((monst->info.abilityFlags & MA_STONE_GAZE) && !player.status[STATUS_HALLUCINATING] && canDirectlySeeMonster(monst)) {
+		                                gazed = true;
+		                        break;
+		                    }
+		                }
+		                if(gazed)
+		                {
+		                    messageWithColor("you feel your flesh turning to stone.", &badMessageColor, false);
+		                    player.status[STATUS_PETRIFYING]++;
+		                }
+				
 				for (monst = monsters->nextCreature; monst != NULL;) {
 					nextMonst = monst->nextCreature;
 					applyInstantTileEffectsToCreature(monst);
@@ -2206,7 +2220,7 @@ void playerTurnEnded() {
 				break;
 			}
 		}
-        	petrify(&player, gazed);
+        	checkPetrification(&player, gazed);
 		
 		displayCombatText();
 		
