@@ -1561,18 +1561,21 @@ void addPoison(creature *monst, short damage) {
     }
 }
 
-// Adds to the creatures petrification status
-void petrify(creature *victim, boolean current) {
+// tracks the creatures petrification status
+void checkPetrification(creature *victim, boolean current) {
     if(current)
     {
         if (victim == &player) {
             if(victim->status[STATUS_PETRIFYING] == 0)
+            {
                 message("you gaze at the medusa!", true);
-            messageWithColor("you feel your flesh turning to stone.", &badMessageColor, false);
-            if(victim->status[STATUS_PETRIFYING] == TURNS_TO_PETRIFY)
+                victim->status[STATUS_PETRIFYING] = 1;
+            }
+            //messageWithColor("you feel your flesh turning to stone.", &badMessageColor, false);
+            if(victim->status[STATUS_PETRIFYING] > TURNS_TO_PETRIFY)
                 gameOver("Turned to stone", true);
         }
-        victim->status[STATUS_PETRIFYING] = (victim->status[STATUS_PETRIFYING]) + 1;
+        //victim->status[STATUS_PETRIFYING] = (victim->status[STATUS_PETRIFYING]) + 1;
         victim->maxStatus[STATUS_PETRIFYING] = TURNS_TO_PETRIFY;
     }
     else{
