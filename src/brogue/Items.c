@@ -1510,7 +1510,6 @@ void itemDetails(char *buf, item *theItem) {
 		"the enemy will be confused",
 		"the enemy will be flung",
 		"[slaying]", // never used
-		"the enemy's strength will be weakened",
 		"the enemy will be healed",
 		"the enemy will be cloned"
 	};
@@ -1886,10 +1885,7 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
                                             sprintf(buf2, " and the distance will increase to %i.)",
                                                     nextLevelState);
                                         }
-                                        else if (theItem->enchant2 == W_ENERVATION) {
-                                            sprintf(buf2, " and the enemy will be weakened by %i.)",
-                                                    nextLevelState);
-                                        }else {
+                                        else {
                                             sprintf(buf2, " and the duration will increase to %i turns.)",
                                                     nextLevelState);
                                         }
@@ -3253,9 +3249,9 @@ short monsterDefenseAdjusted(const creature *monst) {
 }
 
 // Adds one to the creature's weakness, sets the weakness status duration to maxDuration.
-void weaken(creature *monst, short maxDuration, short amount) {
+void weaken(creature *monst, short maxDuration) {
     if (monst->weaknessAmount < 10) {
-        monst->weaknessAmount+=amount;
+        monst->weaknessAmount++;
     }
 	monst->status[STATUS_WEAKENED] = max(monst->status[STATUS_WEAKENED], maxDuration);
 	monst->maxStatus[STATUS_WEAKENED] = max(monst->maxStatus[STATUS_WEAKENED], maxDuration);
