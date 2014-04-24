@@ -1858,12 +1858,6 @@ Lumenstones are said to contain mysterious properties of untold power, but for y
 										strcat(buf, buf2);
 										nextLevelState = weaponForceDistance((float) (enchant + enchantIncrement(theItem)));
 										break;
-									case W_ENERVATION:
-										sprintf(buf2, " by %i. ",
-												weaponWeaknessCount(enchant));
-										strcat(buf, buf2);
-										nextLevelState = weaponWeaknessCount((float) (enchant + enchantIncrement(theItem)));
-										break;
 									case W_MERCY:
 										strcpy(buf2, " by 50% of its maximum health. ");
 										strcat(buf, buf2);
