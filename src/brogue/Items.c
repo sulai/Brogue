@@ -6800,7 +6800,6 @@ unsigned long itemValue(item *theItem) {
 		750,	//W_CONFUSION,
 		850,    //W_FORCE,
 		500,	//W_SLAYING,
-		800,	//W_ENERVATION,
 		-1000,	//W_MERCY,
 		-1000,	//W_PLENTY,
 	};
