@@ -539,7 +539,6 @@ short runicWeaponChance(item *theItem, boolean customEnchantLevel, float enchant
 		0.11,	// W_CONFUSION
 		0.15,   // W_FORCE
 		0,		// W_SLAYING
-		0.12,	//W_ENERVATION
 		0,		// W_MERCY
 		0};		// W_PLENTY
 	float rootChance, modifier;
