@@ -73,7 +73,7 @@ void drawMenuFlames(signed short flames[COLS][(ROWS + MENU_FLAME_ROW_PADDING)][3
 	}
 }
 
-void updateMenuFlames(color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)],
+void updateMenuFlames(const color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)],
 					  signed short colorSources[MENU_FLAME_COLOR_SOURCE_COUNT][4],
 					  signed short flames[COLS][(ROWS + MENU_FLAME_ROW_PADDING)][3]) {
 	
@@ -175,7 +175,8 @@ void antiAlias(unsigned char mask[COLS][ROWS]) {
 #define MENU_TITLE_HEIGHT	19
 
 void initializeMenuFlames(boolean includeTitle,
-						  color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)],
+						  const color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)],
+                          color colorStorage[COLS],
 						  signed short colorSources[MENU_FLAME_COLOR_SOURCE_COUNT][4],
 						  signed short flames[COLS][(ROWS + MENU_FLAME_ROW_PADDING)][3],
 						  unsigned char mask[COLS][ROWS]) {
@@ -227,7 +228,10 @@ void initializeMenuFlames(boolean includeTitle,
 	// Put some flame source along the bottom row.
 	colorSourceCount = 0;
 	for (i=0; i<COLS; i++) {
-		colors[i][(ROWS + MENU_FLAME_ROW_PADDING)-1] = &flameSourceColor;
+        colorStorage[colorSourceCount] = flameSourceColor;
+        applyColorAverage(&(colorStorage[colorSourceCount]), &flameSourceColorSecondary, 100 - (smoothHiliteGradient(i, COLS - 1) + 25));
+        
+		colors[i][(ROWS + MENU_FLAME_ROW_PADDING)-1] = &(colorStorage[colorSourceCount]);
 		colorSourceCount++;
 	}
 	
@@ -247,9 +251,7 @@ void initializeMenuFlames(boolean includeTitle,
 		antiAlias(mask);
 	}
 	
-#ifdef BROGUE_ASSERTS
-	assert(colorSourceCount <= MENU_FLAME_COLOR_SOURCE_COUNT);
-#endif
+    brogueAssert(colorSourceCount <= MENU_FLAME_COLOR_SOURCE_COUNT);
 	
 	// Simulate the background flames for a while
 	for (i=0; i<100; i++) {
@@ -261,7 +263,8 @@ void initializeMenuFlames(boolean includeTitle,
 void titleMenu() {
 	signed short flames[COLS][(ROWS + MENU_FLAME_ROW_PADDING)][3]; // red, green and blue
 	signed short colorSources[MENU_FLAME_COLOR_SOURCE_COUNT][4]; // red, green, blue, and rand, one for each color source (no more than MENU_FLAME_COLOR_SOURCE_COUNT).
-	color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)];
+	const color *colors[COLS][(ROWS + MENU_FLAME_ROW_PADDING)];
+    color colorStorage[COLS];
 	unsigned char mask[COLS][ROWS];
 	boolean controlKeyWasDown = false;
 	
@@ -338,7 +341,7 @@ void titleMenu() {
 	rectangularShading(x, y, 20, b*2-1, &black, INTERFACE_OPACITY, shadowBuf);
 	drawButtonsInState(&state);
 
-	initializeMenuFlames(true, colors, colorSources, flames, mask);
+	initializeMenuFlames(true, colors, colorStorage, colorSources, flames, mask);
     rogue.creaturesWillFlashThisTurn = false; // total unconscionable hack
 	
 	do {
@@ -375,7 +378,13 @@ void titleMenu() {
 	} while (button == -1 && rogue.nextGame == NG_NOTHING);
 	drawMenuFlames(flames, mask);
 	if (button != -1) {
-		rogue.nextGame = buttonCommands[button];
+        if (button == 0 && controlKeyIsDown()) {
+            // Should fix an issue with Linux/Windows ports that require moving the mouse after
+            // pressing control to get the button to change.
+            rogue.nextGame = NG_NEW_GAME_WITH_SEED;
+        } else {
+            rogue.nextGame = buttonCommands[button];
+        }
 	}
 }
 
@@ -570,11 +579,31 @@ boolean dialogChooseFile(char *path, const char *suffix, const char *prompt) {
 	}
 }
 
+void scumMonster(creature *monst, FILE *logFile) {
+    char buf[500];
+    if (monst->bookkeepingFlags & MB_CAPTIVE) {
+        monsterName(buf, monst, false);
+        upperCase(buf);
+        fprintf(logFile, "\n        %s (captive)", buf);
+        if (monst->machineHome > 0) {
+            fprintf(logFile, " (vault %i)", monst->machineHome);
+        }
+    } else if (monst->creatureState == MONSTER_ALLY) {
+        monsterName(buf, monst, false);
+        upperCase(buf);
+        fprintf(logFile, "\n        %s (allied)", buf);
+        if (monst->machineHome) {
+            fprintf(logFile, " (vault %i)", monst->machineHome);
+        }
+    }
+}
+
 void scum(unsigned long startingSeed, short numberOfSeedsToScan, short scanThroughDepth) {
     unsigned long theSeed;
     char path[BROGUE_FILENAME_MAX];
-    item *theItem, spareItem;
-    char buf[200];
+    item *theItem;
+    creature *monst;
+    char buf[500];
     FILE *logFile;
     
     logFile = fopen("Brogue seed catalog.txt", "w");
@@ -601,18 +630,23 @@ the first %i depths will, of course, make the game significantly easier.",
         
         strcpy(currentFilePath, path);
         initializeRogue(theSeed);
+        rogue.playbackOmniscience = true;
         for (rogue.depthLevel = 1; rogue.depthLevel <= scanThroughDepth; rogue.depthLevel++) {
             startLevel(rogue.depthLevel == 1 ? 1 : rogue.depthLevel - 1, 1); // descending into level n
             fprintf(logFile, "\n    Depth %i:", rogue.depthLevel);
             for (theItem = floorItems->nextItem; theItem != NULL; theItem = theItem->nextItem) {
-                spareItem = *theItem;
-                identify(&spareItem);
-                itemName(&spareItem, buf, true, true, NULL);
+                itemName(theItem, buf, true, true, NULL);
                 upperCase(buf);
                 fprintf(logFile, "\n        %s", buf);
                 if (pmap[theItem->xLoc][theItem->yLoc].machineNumber > 0) {
                     fprintf(logFile, " (vault %i)", pmap[theItem->xLoc][theItem->yLoc].machineNumber);
                 }
+            }
+            for (monst = monsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
+                scumMonster(monst, logFile);
+            }
+            for (monst = dormantMonsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
+                scumMonster(monst, logFile);
             }
         }
         freeEverything();
@@ -764,11 +798,16 @@ void mainBrogueJunction() {
 					initializeRogue(0); // Seed argument is ignored because we're in playback.
 					if (!rogue.gameHasEnded) {
 						startLevel(rogue.depthLevel, 1);
-						pausePlayback();
+                        rogue.playbackPaused = true;
 						displayAnnotation(); // in case there's an annotation for turn 0
 					}
 					
 					while(!rogue.gameHasEnded && rogue.playbackMode) {
+                        if (rogue.playbackPaused) {
+                            rogue.playbackPaused = false;
+                            pausePlayback();
+                        }
+                        
 						rogue.RNG = RNG_COSMETIC; // dancing terrain colors can't influence recordings
 						rogue.playbackBetweenTurns = true;
 						nextBrogueEvent(&theEvent, false, true, false);

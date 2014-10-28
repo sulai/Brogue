@@ -1,7 +1,7 @@
 Brogue
 ======
 
-This is a fork of Brian Walker's "Brogue", a wonderful roguelike game.
+This is a fork of Brian Walker's "Brogue", a modern roguelike with a strong focus on simple user interface and unique game play.
 
 
 Description of the folder layout
@@ -13,12 +13,10 @@ The build scripts for each platform can be found in **build**. They work on sour
 Description of the branches
 ===========================
 
-The **master** branch (**original_brogue**) reflects brogue as it is released officialy by Brian Walker. Source files and resources have exactly the same state, while build scripts are adapted to the unified folder structure.
+The **master** branch reflects brogue as it is released officialy by Brian Walker. Source files and resources have exactly the same state, while build scripts are adapted to the unified folder structure.
 
 There are some **feature** branches, each of which contains a single feature separately. This makes it easy to exchange features between repositories.
 
 Also, there is a **bugfix** branch, which fixes bugs that are present in *original_brogue*.
 
-Then, there is the **development** branch, where everything goes together, more or less in a disordered way ;)
-
-Other branches have no meaning (yet). They are simply there because we could some day decide to use this branching model. http://nvie.com/posts/a-successful-git-branching-model/
+Then, there is the **development** branch, where we try to merge all features to enjoy them all :-)

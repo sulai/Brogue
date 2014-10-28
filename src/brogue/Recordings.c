@@ -70,9 +70,7 @@ void numberToString(unsigned long number, short numberOfBytes, unsigned char *re
 	}
 	if (n > 0) {
 		printf("\nError: the number %li does not fit in %i bytes.", number, numberOfBytes);
-#ifdef BROGUE_ASSERTS
-		assert(false);
-#endif
+        brogueAssert(false);
 	}
 }
 
@@ -356,6 +354,7 @@ void recallEvent(rogueEvent *event) {
 			case EVENT_ERROR:
 			default:
 				message("Unrecognized event type in playback.", true);
+                printf("Unrecognized event type in playback: event ID %i", c);
 				tryAgain = true;
 				playbackPanic();
 				break;
@@ -496,6 +495,7 @@ void initRecording() {
 		maxLevelChanges			= recallNumber(4);			// how many times the player changes depths
 		lengthOfPlaybackFile	= recallNumber(4);
 		seedRandomGenerator(rogue.seed);
+        previousGameSeed = rogue.seed;
 		
 		if (fileExists(annotationPathname)) {
 			loadNextAnnotation();
@@ -627,6 +627,9 @@ void advanceToLocation(unsigned long destinationFrame) {
     omniscient = rogue.playbackOmniscience;
     stealth = rogue.displayAggroRangeMode;
     trueColors = rogue.trueColorMode;
+    rogue.playbackOmniscience = false;
+    rogue.displayAggroRangeMode = false;
+    rogue.trueColorMode = false;
 	
 	cellDisplayBuffer dbuf[COLS][ROWS];
     
@@ -699,7 +702,7 @@ void promptToAdvanceToLocation(short keystroke) {
 		confirmMessages();
 		rogue.playbackMode = true;
 		
-		if (enteredText) {
+		if (enteredText && entryText[0] != '\0') {
 			sscanf(entryText, "%lu", &destinationFrame);
 			
 			if (destinationFrame >= rogue.howManyTurns) {
@@ -716,13 +719,16 @@ void promptToAdvanceToLocation(short keystroke) {
 }
 
 void pausePlayback() {
+    short oldRNG;
 	if (!rogue.playbackPaused) {
 		rogue.playbackPaused = true;
 		messageWithColor(KEYBOARD_LABELS ? "recording paused. Press space to play." : "recording paused.",
                          &teal, false);
 		refreshSideBar(-1, -1, false);
+        oldRNG = rogue.RNG;
+        //rogue.RNG = RNG_SUBSTANTIVE;
 		mainInputLoop();
-		
+		//rogue.RNG = oldRNG;
 		messageWithColor("recording unpaused.", &teal, false);
 		rogue.playbackPaused = false;
 		refreshSideBar(-1, -1, false);
@@ -732,7 +738,7 @@ void pausePlayback() {
 
 // Used to interact with playback -- e.g. changing speed, pausing.
 void executePlaybackInput(rogueEvent *recordingInput) {
-	uchar key;
+	signed long key;
 	short newDelay, frameCount, x, y, previousDeepestLevel;
 	unsigned long destinationFrame;
 	boolean pauseState, proceed;
@@ -745,6 +751,7 @@ void executePlaybackInput(rogueEvent *recordingInput) {
 	
 	if (recordingInput->eventType == KEYSTROKE) {
 		key = recordingInput->param1;
+        stripShiftFromMovementKeystroke(&key);
 		
 		switch (key) {
 			case UP_ARROW:
@@ -767,7 +774,7 @@ void executePlaybackInput(rogueEvent *recordingInput) {
 				if (rogue.playbackOOS && rogue.playbackPaused) {
 					flashTemporaryAlert(" Out of sync ", 2000);
 				} else {
-					pausePlayback();
+                    rogue.playbackPaused = !rogue.playbackPaused;
 				}
 				break;
 			case TAB_KEY:
@@ -796,8 +803,10 @@ void executePlaybackInput(rogueEvent *recordingInput) {
 							executeEvent(&theEvent);
 						}
 						rogue.playbackFastForward = false;
-						refreshSideBar(-1, -1, false);
+                        rogue.playbackPaused = pauseState;
 						displayLevel();
+						refreshSideBar(-1, -1, false);
+                        updateMessageDisplay();
 					} else {
 						flashTemporaryAlert(" Already reached deepest depth explored ", 1000);
 					}
@@ -856,13 +865,13 @@ void executePlaybackInput(rogueEvent *recordingInput) {
                             rogue.RNG = RNG_SUBSTANTIVE;
                             executeEvent(&theEvent);
                         }
-                        //rogue.playbackPaused = true;
+                        rogue.playbackPaused = true;
                         if (rogue.playbackFastForward) {
                             rogue.playbackFastForward = false;
                             displayLevel();
                             updateMessageDisplay();
-                            refreshSideBar(-1, -1, false);
                         }
+                        refreshSideBar(-1, -1, false);
                     }
                 }
 				break;
@@ -1053,8 +1062,13 @@ void saveRecording() {
 			} else {
 				askAgain = true;
 			}
-		} else { // declined to save
-			remove(currentFilePath);
+		} else { // Declined to save recording; save it anyway as LastRecording, and delete LastRecording if it already exists.
+            strcpy(filePath, LAST_RECORDING_NAME);
+			strcat(filePath, RECORDING_SUFFIX);
+			if (fileExists(filePath)) {
+				remove(filePath);
+			}
+            rename(currentFilePath, filePath);
 		}
 	} while (askAgain);
 	deleteMessages();
@@ -1166,7 +1180,7 @@ void describeKeystroke(unsigned char key, char *description) {
 	const uchar ucharList[52] =	{UP_KEY, DOWN_KEY, LEFT_KEY, RIGHT_KEY, UP_ARROW, LEFT_ARROW,
 		DOWN_ARROW, RIGHT_ARROW, UPLEFT_KEY, UPRIGHT_KEY, DOWNLEFT_KEY, DOWNRIGHT_KEY,
 		DESCEND_KEY, ASCEND_KEY, REST_KEY, AUTO_REST_KEY, SEARCH_KEY, INVENTORY_KEY,
-		ACKNOWLEDGE_KEY, EQUIP_KEY, UNEQUIP_KEY, APPLY_KEY, THROW_KEY, DROP_KEY, CALL_KEY,
+		ACKNOWLEDGE_KEY, EQUIP_KEY, UNEQUIP_KEY, APPLY_KEY, THROW_KEY, RELABEL_KEY, DROP_KEY, CALL_KEY,
 		//FIGHT_KEY, FIGHT_TO_DEATH_KEY,
 		HELP_KEY, DISCOVERIES_KEY, RETURN_KEY,
 		EXPLORE_KEY, AUTOPLAY_KEY, SEED_KEY, EASY_MODE_KEY, ESCAPE_KEY,
@@ -1176,7 +1190,7 @@ void describeKeystroke(unsigned char key, char *description) {
 	const char descList[53][30] = {"up", "down", "left", "right", "up arrow", "left arrow",
 		"down arrow", "right arrow", "upleft", "upright", "downleft", "downright",
 		"descend", "ascend", "rest", "auto rest", "search", "inventory", "acknowledge",
-		"equip", "unequip", "apply", "throw", "drop", "call",
+		"equip", "unequip", "apply", "throw", "relabel", "drop", "call",
 		//"fight", "fight to death",
 		"help", "discoveries", "repeat travel", "explore", "autoplay", "seed",
 		"easy mode", "escape", "return", "enter", "delete", "tab", "period", "open file",
