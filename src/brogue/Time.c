@@ -28,7 +28,8 @@
 void exposeCreatureToFire(creature *monst) {
 	char buf[COLS], buf2[COLS];
 	if (monst->status[STATUS_IMMUNE_TO_FIRE]
-		|| (monst->bookkeepingFlags & MONST_SUBMERGED)
+        || (monst->info.flags & MONST_INVULNERABLE)
+		|| (monst->bookkeepingFlags & MB_SUBMERGED)
 		|| ((!monst->status[STATUS_LEVITATING]) && cellHasTMFlag(monst->xLoc, monst->yLoc, TM_EXTINGUISHES_FIRE))) {
 		return;
 	}
@@ -92,7 +93,7 @@ boolean monsterShouldFall(creature *monst) {
 	return (!(monst->status[STATUS_LEVITATING])
 			&& cellHasTerrainFlag(monst->xLoc, monst->yLoc, T_AUTO_DESCENT)
 			&& !cellHasTerrainFlag(monst->xLoc, monst->yLoc, T_ENTANGLES | T_OBSTRUCTS_PASSABILITY)
-			&& !(monst->bookkeepingFlags & MONST_PREPLACED));
+			&& !(monst->bookkeepingFlags & MB_PREPLACED));
 }
 
 // Called at least every 100 ticks; may be called more frequently.
@@ -102,7 +103,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 	enum dungeonLayers layer;
 	item *theItem;
 	
-	if (monst->bookkeepingFlags & MONST_IS_DYING) {
+	if (monst->bookkeepingFlags & MB_IS_DYING) {
 		return; // the monster is already dead.
 	}
 	
@@ -130,10 +131,19 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 	if (monst == &player) {
         updatePlayerUnderwaterness();
 	}
+    
+    // Obstructed krakens can't seize their prey.
+    if ((monst->bookkeepingFlags & MB_SEIZING)
+        && (cellHasTerrainFlag(*x, *y, T_OBSTRUCTS_PASSABILITY))
+        && !(monst->info.flags & MONST_ATTACKABLE_THRU_WALLS)) {
+        
+        monst->bookkeepingFlags &= ~MB_SEIZING;
+    }
 	
 	// lava
 	if (!(monst->status[STATUS_LEVITATING])
 		&& !(monst->status[STATUS_IMMUNE_TO_FIRE])
+        && !(monst->info.flags & MONST_INVULNERABLE)
 		&& !cellHasTerrainFlag(*x, *y, (T_ENTANGLES | T_OBSTRUCTS_PASSABILITY))
 		&& cellHasTerrainFlag(*x, *y, T_LAVA_INSTA_DEATH)) {
 		
@@ -179,18 +189,18 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 	if (monsterShouldFall(monst)) {
 		if (monst == &player) {
 			// player falling takes place at the end of the turn
-			if (!(monst->bookkeepingFlags & MONST_IS_FALLING)) {
-				monst->bookkeepingFlags |= MONST_IS_FALLING;
+			if (!(monst->bookkeepingFlags & MB_IS_FALLING)) {
+				monst->bookkeepingFlags |= MB_IS_FALLING;
 				return;
 			}
 		} else { // it's a monster
-			monst->bookkeepingFlags |= MONST_IS_FALLING; // handled at end of turn
+			monst->bookkeepingFlags |= MB_IS_FALLING; // handled at end of turn
 		}
 	}
 	
 	// Pressure plates.
 	if (!(monst->status[STATUS_LEVITATING])
-		&& !(monst->bookkeepingFlags & MONST_SUBMERGED)
+		&& !(monst->bookkeepingFlags & MB_SUBMERGED)
         && (!cellHasTMFlag(*x, *y, TM_ALLOWS_SUBMERGING) || !(monst->info.flags & MONST_SUBMERGES))
 		&& cellHasTerrainFlag(*x, *y, T_IS_DF_TRAP)
 		&& !(pmap[*x][*y].flags & PRESSURE_PLATE_DEPRESSED)) {
@@ -241,23 +251,30 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 	
 	// spiderwebs
 	if (cellHasTerrainFlag(*x, *y, T_ENTANGLES) && !monst->status[STATUS_STUCK]
-		&& !(monst->info.flags & MONST_IMMUNE_TO_WEBS) && !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+		&& !(monst->info.flags & (MONST_IMMUNE_TO_WEBS | MONST_INVULNERABLE))
+        && !(monst->bookkeepingFlags & MB_SUBMERGED)) {
+        
 		monst->status[STATUS_STUCK] = monst->maxStatus[STATUS_STUCK] = rand_range(3, 7);
 		if (monst == &player) {
-			sprintf(buf2, "you are stuck fast in %s!",
-					tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_ENTANGLES)]].description);
-			message(buf2, false);
+            if (!rogue.automationActive) {
+                // Don't interrupt exploration with this message.
+                sprintf(buf2, "you are stuck fast in %s!",
+                        tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_ENTANGLES)]].description);
+                message(buf2, false);
+            }
 		} else if (canDirectlySeeMonster(monst)) { // it's a monster
-			monsterName(buf, monst, true);
-			sprintf(buf2, "%s is stuck fast in %s!", buf,
-					tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_ENTANGLES)]].description);
-			message(buf2, false);
+            if (!rogue.automationActive) {
+                monsterName(buf, monst, true);
+                sprintf(buf2, "%s is stuck fast in %s!", buf,
+                        tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_ENTANGLES)]].description);
+                message(buf2, false);
+            }
 		}
 	}
 	
 	// explosions
 	if (cellHasTerrainFlag(*x, *y, T_CAUSES_EXPLOSIVE_DAMAGE) && !monst->status[STATUS_EXPLOSION_IMMUNITY]
-		&& !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+		&& !(monst->bookkeepingFlags & MB_SUBMERGED)) {
 		damage = rand_range(15, 20);
 		damage = max(damage, monst->info.maxHP / 2);
 		monst->status[STATUS_EXPLOSION_IMMUNITY] = 5;
@@ -269,8 +286,8 @@ void applyInstantTileEffectsToCreature(creature *monst) {
                 itemName(rogue.armor, buf2, false, false, NULL);
                 sprintf(buf, "Your %s pulses and absorbs the damage.", buf2);
                 messageWithColor(buf, &goodMessageColor, false);
-                rogue.armor->flags |= ITEM_RUNIC_IDENTIFIED;
-            } else if (inflictDamage(&player, damage, &yellow, false)) {
+                autoIdentify(rogue.armor);
+            } else if (inflictDamage(NULL, &player, damage, &yellow, false)) {
 				strcpy(buf2, tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_CAUSES_EXPLOSIVE_DAMAGE)]].description);
 				sprintf(buf, "Killed by %s", buf2);
 				gameOver(buf, true);
@@ -281,7 +298,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 				monst->creatureState = MONSTER_TRACKING_SCENT;
 			}
 			monsterName(buf, monst, true);
-			if (inflictDamage(monst, damage, &yellow, false)) {
+			if (inflictDamage(NULL, monst, damage, &yellow, false)) {
 				// if killed
 				sprintf(buf2, "%s %s %s.", buf,
                         (monst->info.flags & MONST_INANIMATE) ? "is destroyed by" : "dies in",
@@ -313,8 +330,8 @@ void applyInstantTileEffectsToCreature(creature *monst) {
         
         // zombie gas
         if (cellHasTerrainFlag(*x, *y, T_CAUSES_NAUSEA)
-            && !(monst->info.flags & MONST_INANIMATE)
-            && !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+            && !(monst->info.flags & (MONST_INANIMATE | MONST_INVULNERABLE))
+            && !(monst->bookkeepingFlags & MB_SUBMERGED)) {
             if (monst == &player) {
                 rogue.disturbed = true;
             }
@@ -332,7 +349,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
         }
         
         // confusion gas
-        if (cellHasTerrainFlag(*x, *y, T_CAUSES_CONFUSION) && !(monst->info.flags & MONST_INANIMATE)) {
+        if (cellHasTerrainFlag(*x, *y, T_CAUSES_CONFUSION) && !(monst->info.flags & (MONST_INANIMATE | MONST_INVULNERABLE))) {
             if (monst == &player) {
                 rogue.disturbed = true;
             }
@@ -349,7 +366,10 @@ void applyInstantTileEffectsToCreature(creature *monst) {
         }
         
         // paralysis gas
-        if (cellHasTerrainFlag(*x, *y, T_CAUSES_PARALYSIS) && !(monst->info.flags & MONST_INANIMATE) && !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+        if (cellHasTerrainFlag(*x, *y, T_CAUSES_PARALYSIS)
+            && !(monst->info.flags & (MONST_INANIMATE | MONST_INVULNERABLE))
+            && !(monst->bookkeepingFlags & MB_SUBMERGED)) {
+            
             if (canDirectlySeeMonster(monst) && !monst->status[STATUS_PARALYZED]) {
                 flashMonster(monst, &pink, 100);
                 monsterName(buf, monst, true);
@@ -364,7 +384,10 @@ void applyInstantTileEffectsToCreature(creature *monst) {
     }
     
     // poisonous lichen
-    if (cellHasTerrainFlag(*x, *y, T_CAUSES_POISON) && !(monst->info.flags & MONST_INANIMATE) && !monst->status[STATUS_LEVITATING]) {
+    if (cellHasTerrainFlag(*x, *y, T_CAUSES_POISON)
+        && !(monst->info.flags & (MONST_INANIMATE | MONST_INVULNERABLE))
+        && !monst->status[STATUS_LEVITATING]) {
+        
         if (monst == &player && !player.status[STATUS_POISONED]) {
             rogue.disturbed = true;
         }
@@ -378,7 +401,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
             messageWithColor(buf2, messageColorFromVictim(monst), false);
         }
         damage = max(0, 5 - monst->status[STATUS_POISONED]);
-        addPoison(monst, damage);
+        addPoison(monst, damage, 0); // Lichen doesn't increase poison concentration above 1.
     }
 	
 	// fire
@@ -387,7 +410,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 	} else if (cellHasTerrainFlag(*x, *y, T_IS_FLAMMABLE)
 			   && !cellHasTerrainFlag(*x, *y, T_IS_FIRE)
 			   && monst->status[STATUS_BURNING]
-               && !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+               && !(monst->bookkeepingFlags & MB_SUBMERGED)) {
 		exposeTileToFire(*x, *y, true);
 	}
 	
@@ -400,7 +423,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
 	short itemCandidates, randItemIndex;
 	short x = monst->xLoc, y = monst->yLoc, damage;
-	char buf[COLS], buf2[COLS];
+	char buf[COLS * 5], buf2[COLS * 3];
 	item *theItem;
 	enum dungeonLayers layer;
 	
@@ -425,7 +448,9 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
 					theItem = dropItem(theItem);
 					if (theItem) {
 						itemName(theItem, buf2, false, true, NULL);
-						sprintf(buf, "%s floats away in the current!", buf2);
+						sprintf(buf, "%s float%s away in the current!",
+                                buf2,
+                                (theItem->quantity == 1 ? "s" : ""));
 						messageWithColor(buf, &itemMessageColor, false);
 					}
 				}
@@ -436,8 +461,8 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
 	}
 	
 	if (cellHasTerrainFlag(x, y, T_CAUSES_DAMAGE)
-		&& !(monst->info.flags & MONST_INANIMATE)
-		&& !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+		&& !(monst->info.flags & (MONST_INANIMATE | MONST_INVULNERABLE))
+		&& !(monst->bookkeepingFlags & MB_SUBMERGED)) {
         
 		damage = (monst->info.maxHP / 15) * ticks / 100;
 		damage = max(1, damage);
@@ -451,7 +476,7 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
             } else {
                 rogue.disturbed = true;
                 messageWithColor(tileCatalog[pmap[x][y].layers[layer]].flavorText, &badMessageColor, false);
-                if (inflictDamage(&player, damage, tileCatalog[pmap[x][y].layers[layer]].backColor, true)) {
+                if (inflictDamage(NULL, &player, damage, tileCatalog[pmap[x][y].layers[layer]].backColor, true)) {
                     sprintf(buf, "Killed by %s", tileCatalog[pmap[x][y].layers[layer]].description);
                     gameOver(buf, true);
                     return;
@@ -461,7 +486,7 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
 			if (monst->creatureState == MONSTER_SLEEPING) {
 				monst->creatureState = MONSTER_TRACKING_SCENT;
 			}
-			if (inflictDamage(monst, damage, tileCatalog[pmap[x][y].layers[layer]].backColor, true)) {
+			if (inflictDamage(NULL, monst, damage, tileCatalog[pmap[x][y].layers[layer]].backColor, true)) {
 				if (canSeeMonster(monst)) {
 					monsterName(buf, monst, true);
 					sprintf(buf2, "%s dies.", buf);
@@ -475,7 +500,7 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
     
     if (cellHasTerrainFlag(x, y, T_CAUSES_HEALING)
 		&& !(monst->info.flags & MONST_INANIMATE)
-		&& !(monst->bookkeepingFlags & MONST_SUBMERGED)) {
+		&& !(monst->bookkeepingFlags & MB_SUBMERGED)) {
         
 		damage = (monst->info.maxHP / 15) * ticks / 100;
 		damage = max(1, damage);
@@ -523,9 +548,9 @@ void updateClairvoyance() {
 			
 			if (dx*dx + dy*dy < clairvoyanceRadius*clairvoyanceRadius + clairvoyanceRadius
 				&& (pmap[i][j].layers[DUNGEON] != GRANITE || pmap[i][j].flags & DISCOVERED)) {
-				if ((cFlags & ~pmap[i][j].flags & DISCOVERED)
-					&& !cellHasTerrainFlag(i, j, T_PATHING_BLOCKER)) {
-					rogue.xpxpThisTurn++;
+                
+				if (cFlags & DISCOVERED) {
+                    discoverCell(i, j);
 				}
 				pmap[i][j].flags |= cFlags;
 				if (!(pmap[i][j].flags & HAS_PLAYER) && !cursed) {
@@ -555,19 +580,22 @@ void updateTelepathy() {
     for (monst = monsters->nextCreature; monst; monst = monst->nextCreature) {
         if (monsterRevealed(monst)) {
             getFOVMask(grid, monst->xLoc, monst->yLoc, 1.5, T_OBSTRUCTS_VISION, 0, false);
-            pmap[monst->xLoc][monst->yLoc].flags |= (TELEPATHIC_VISIBLE | DISCOVERED);
+            pmap[monst->xLoc][monst->yLoc].flags |= TELEPATHIC_VISIBLE;
+            discoverCell(monst->xLoc, monst->yLoc);
         }
     }
     for (monst = dormantMonsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
         if (monsterRevealed(monst)) {
             getFOVMask(grid, monst->xLoc, monst->yLoc, 1.5, T_OBSTRUCTS_VISION, 0, false);
-            pmap[monst->xLoc][monst->yLoc].flags |= (TELEPATHIC_VISIBLE | DISCOVERED);
+            pmap[monst->xLoc][monst->yLoc].flags |= TELEPATHIC_VISIBLE;
+            discoverCell(monst->xLoc, monst->yLoc);
         }
     }
     for (i = 0; i < DCOLS; i++) {
         for (j = 0; j < DROWS; j++) {
             if (grid[i][j]) {
-                pmap[i][j].flags |= (TELEPATHIC_VISIBLE | DISCOVERED);
+                pmap[i][j].flags |= TELEPATHIC_VISIBLE;
+                discoverCell(i, j);
             }
         }
     }
@@ -609,36 +637,43 @@ short armorAggroAdjustment(item *theArmor) {
 }
 
 short currentAggroValue() {
-    // Default value of 6.
-    short stealthVal = 6;
+    // Default value of 7.
+    short stealthVal = 7;
     
     if (player.status[STATUS_INVISIBLE]) {
-        stealthVal = 1;
-    } else if (playerInDarkness()) {
-        // In darkness, halve.
-        stealthVal = (stealthVal + 1) / 2;
-    } else if (!(pmap[player.xLoc][player.yLoc].flags & IS_IN_SHADOW)) {
-        // In light, double.
-        stealthVal *= 2;
+        stealthVal = 1; // Invisibility means stealth range of 1, no matter what.
+    } else {
+        if (playerInDarkness()) {
+            // In darkness, halve.
+            stealthVal = (stealthVal + 1) / 2;
+        } else if (!(pmap[player.xLoc][player.yLoc].flags & IS_IN_SHADOW)) {
+            // In light, double.
+            stealthVal *= 2;
+        }
+        
+        // Add 1 for each point of your armor's natural (unenchanted) strength requirement above 12.
+        stealthVal += armorAggroAdjustment(rogue.armor);
+        
+        // Halve (rounded up) if you just rested.
+        if (rogue.justRested) {
+            stealthVal = (stealthVal + 1) / 2;
+        }
+        
+        if (player.status[STATUS_AGGRAVATING] > 0) {
+            stealthVal += player.status[STATUS_AGGRAVATING];
+        }
+        
+        // Subtract your bonuses from rings of stealth.
+        // (Cursed rings of stealth will end up adding here.)
+        stealthVal -= rogue.stealthBonus;
+        
+        // Can't go below 2 unless you just rested.
+        if (stealthVal < 2 && !rogue.justRested) {
+            stealthVal = 2;
+        } else if (stealthVal < 1) { // Can't go below 1, ever.
+            stealthVal = 1;
+        }
     }
-    
-    // Add 1 for each point of your armor's natural (unenchanted) strength requirement above 12.
-    stealthVal += armorAggroAdjustment(rogue.armor);
-    
-    // Halve (rounded up) if you just rested.
-    if (rogue.justRested) {
-        stealthVal = (stealthVal + 1) / 2;
-    }
-    
-    // Subtract your bonuses from rings of stealth.
-    // (Cursed rings of stealth will end up adding here.)
-    stealthVal -= rogue.stealthBonus;
-    
-    // Can't go below 1, ever.
-    if (stealthVal < 1) {
-        stealthVal = 1;
-    }
-    
     return stealthVal;
 }
 
@@ -654,6 +689,16 @@ void demoteVisibility() {
 			}
 		}
 	}
+}
+
+void discoverCell(const short x, const short y) {
+    pmap[x][y].flags &= ~STABLE_MEMORY;
+    if (!(pmap[x][y].flags & DISCOVERED)) {
+        pmap[x][y].flags |= DISCOVERED;
+        if (!cellHasTerrainFlag(x, y, T_PATHING_BLOCKER)) {
+            rogue.xpxpThisTurn++;
+        }
+    }
 }
 
 void updateVision(boolean refreshDisplay) {
@@ -682,8 +727,7 @@ void updateVision(boolean refreshDisplay) {
 	pmap[player.xLoc][player.yLoc].flags |= IN_FIELD_OF_VIEW | VISIBLE;
 	
 	if (rogue.clairvoyance < 0) {
-		pmap[player.xLoc][player.yLoc].flags |= DISCOVERED;
-		pmap[player.xLoc][player.yLoc].flags &= ~STABLE_MEMORY;
+        discoverCell(player.xLoc, player.yLoc);
 	}
 	
 	if (rogue.clairvoyance != 0) {
@@ -761,7 +805,7 @@ void checkNutrition() {
 
 void burnItem(item *theItem) {
 	short x, y;
-	char buf1[DCOLS], buf2[DCOLS];
+	char buf1[COLS * 3], buf2[COLS * 3];
 	itemName(theItem, buf1, false, true, NULL);
 	sprintf(buf2, "%s burn%s up!",
             buf1,
@@ -819,7 +863,7 @@ void handleHealthAlerts() {
 	rogue.previousHealthPercent = currentPercent;
 	
     if (!rogue.gameHasEnded) {
-        currentPercent = player.status[STATUS_POISONED] * 100 / player.currentHP;
+        currentPercent = player.status[STATUS_POISONED] * player.poisonAmount * 100 / player.currentHP;
         
         if (currentPercent > rogue.previousPoisonPercent && !rogue.gameHasEnded) {
             for (i=0; i < poisonThresholdsCount; i++) {
@@ -843,7 +887,7 @@ void handleHealthAlerts() {
 void addXPXPToAlly(short XPXP, creature *monst) {
     char theMonsterName[100], buf[200];
     if (!(monst->info.flags & (MONST_INANIMATE | MONST_IMMOBILE))
-        && !(monst->bookkeepingFlags & MONST_TELEPATHICALLY_REVEALED)
+        && !(monst->bookkeepingFlags & MB_TELEPATHICALLY_REVEALED)
         && monst->creatureState == MONSTER_ALLY
         && monst->spawnDepth <= rogue.depthLevel
         && rogue.depthLevel <= AMULET_LEVEL) {
@@ -851,9 +895,9 @@ void addXPXPToAlly(short XPXP, creature *monst) {
         monst->xpxp += XPXP;
         //printf("\n%i xpxp added to your %s this turn.", rogue.xpxpThisTurn, monst->info.monsterName);
         if (monst->xpxp >= XPXP_NEEDED_FOR_TELEPATHIC_BOND
-            && !(monst->bookkeepingFlags & MONST_TELEPATHICALLY_REVEALED)) {
+            && !(monst->bookkeepingFlags & MB_TELEPATHICALLY_REVEALED)) {
             
-            monst->bookkeepingFlags |= MONST_TELEPATHICALLY_REVEALED;
+            monst->bookkeepingFlags |= MB_TELEPATHICALLY_REVEALED;
             updateVision(true);
             monsterName(theMonsterName, monst, false);
             sprintf(buf, "you have developed a telepathic bond with your %s.", theMonsterName);
@@ -905,7 +949,7 @@ void playerFalls() {
 		message("You plunge downward!", true);
 	}
 	
-    player.bookkeepingFlags &= ~(MONST_IS_FALLING | MONST_SEIZED | MONST_SEIZING);
+    player.bookkeepingFlags &= ~(MB_IS_FALLING | MB_SEIZED | MB_SEIZING);
 	rogue.disturbed = true;
     
     if (rogue.depthLevel < DEEPEST_LEVEL) {
@@ -913,7 +957,7 @@ void playerFalls() {
         startLevel(rogue.depthLevel - 1, 0);
         damage = randClumpedRange(FALL_DAMAGE_MIN, FALL_DAMAGE_MAX, 2);
         messageWithColor("You are damaged by the fall.", &badMessageColor, false);
-        if (inflictDamage(&player, damage, &red, false)) {
+        if (inflictDamage(NULL, &player, damage, &red, false)) {
             gameOver("Killed by a fall", true);
         } else if (rogue.depthLevel > rogue.deepestLevel) {
             rogue.deepestLevel = rogue.depthLevel;
@@ -974,7 +1018,7 @@ void activateMachine(short machineNumber) {
         }
     }
     for (i=0; i<monsterCount; i++) {
-        if (!(activatedMonsterList[i]->bookkeepingFlags & MONST_IS_DYING)) {
+        if (!(activatedMonsterList[i]->bookkeepingFlags & MB_IS_DYING)) {
             monstersTurn(activatedMonsterList[i]);
         }
     }
@@ -1039,6 +1083,22 @@ void promoteTile(short x, short y, enum dungeonLayers layer, boolean useFireDF) 
 	}
 }
 
+boolean exposeTileToElectricity(short x, short y) {
+	enum dungeonLayers layer;
+    boolean promotedSomething = false;
+	
+	if (!cellHasTMFlag(x, y, TM_PROMOTES_ON_ELECTRICITY)) {
+		return false;
+	}
+	for (layer=0; layer < NUMBER_TERRAIN_LAYERS; layer++) {
+		if (tileCatalog[pmap[x][y].layers[layer]].mechFlags & TM_PROMOTES_ON_ELECTRICITY) {
+            promoteTile(x, y, layer, false);
+            promotedSomething = true;
+		}
+	}
+	return promotedSomething;
+}
+
 boolean exposeTileToFire(short x, short y, boolean alwaysIgnite) {
 	enum dungeonLayers layer;
 	short ignitionChance = 0, bestExtinguishingPriority = 1000, explosiveNeighborCount = 0;
@@ -1072,7 +1132,7 @@ boolean exposeTileToFire(short x, short y, boolean alwaysIgnite) {
         
         // Count explosive neighbors.
         if (cellHasTMFlag(x, y, TM_EXPLOSIVE_PROMOTE)) {
-            for (dir = 0, explosiveNeighborCount = 0; dir < 8; dir++) {
+            for (dir = 0, explosiveNeighborCount = 0; dir < DIRECTION_COUNT; dir++) {
                 newX = x + nbDirs[dir][0];
                 newY = y + nbDirs[dir][1];
                 if (coordinatesAreInMap(newX, newY)
@@ -1106,8 +1166,6 @@ void updateVolumetricMedia() {
 	unsigned long highestNeighborVolume;
 	unsigned long sum;
 	enum tileType gasType;
-	// assume gas layer
-	//	enum dungeonLayers layer;
 	enum directions dir;
 	unsigned short newGasVolume[DCOLS][DROWS];
 	
@@ -1124,7 +1182,7 @@ void updateVolumetricMedia() {
 				numSpaces = 1;
 				highestNeighborVolume = pmap[i][j].volume;
 				gasType = pmap[i][j].layers[GAS];
-				for (dir=0; dir<8; dir++) {
+				for (dir=0; dir< DIRECTION_COUNT; dir++) {
 					newX = i + nbDirs[dir][0];
 					newY = j + nbDirs[dir][1];
 					if (coordinatesAreInMap(newX, newY)
@@ -1138,7 +1196,7 @@ void updateVolumetricMedia() {
 						}
 					}
 				}
-				if (cellHasTerrainFlag(i, j, T_AUTO_DESCENT)) { // if it's a chasm tile or trap door
+				if (cellHasTerrainFlag(i, j, T_AUTO_DESCENT)) { // if it's a chasm tile or trap door,
 					numSpaces++; // this will allow gas to escape from the level entirely
 				}
 				newGasVolume[i][j] += sum / max(1, numSpaces);
@@ -1161,10 +1219,10 @@ void updateVolumetricMedia() {
 						newGasVolume[i][j] -= (rand_percent(20) ? 1 : 0);
 					}
 				}
-			} else if (pmap[i][j].volume > 0) { // if has gas but can't hold gas
+			} else if (pmap[i][j].volume > 0) { // if has gas but can't hold gas,
 				// disperse gas instantly into neighboring tiles that can hold gas
 				numSpaces = 0;
-				for (dir = 0; dir < 8; dir++) {
+				for (dir = 0; dir < DIRECTION_COUNT; dir++) {
 					newX = i + nbDirs[dir][0];
 					newY = j + nbDirs[dir][1];
 					if (coordinatesAreInMap(newX, newY)
@@ -1174,7 +1232,7 @@ void updateVolumetricMedia() {
 					}
 				}
 				if (numSpaces > 0) {
-					for (dir = 0; dir < 8; dir++) {
+					for (dir = 0; dir < DIRECTION_COUNT; dir++) {
 						newX = i + nbDirs[dir][0];
 						newY = j + nbDirs[dir][1];
 						if (coordinatesAreInMap(newX, newY)
@@ -1203,6 +1261,48 @@ void updateVolumetricMedia() {
 	}
 }
 
+void updateYendorWardenTracking() {
+    creature *prevMonst;
+    short n;
+    
+    if (!rogue.yendorWarden) {
+        return;
+    }
+    if (rogue.yendorWarden->depth == rogue.depthLevel) {
+        return;
+    }
+    if (!(rogue.yendorWarden->bookkeepingFlags & MB_PREPLACED)) {
+        levels[rogue.yendorWarden->depth - 1].mapStorage[rogue.yendorWarden->xLoc][rogue.yendorWarden->yLoc].flags &= ~HAS_MONSTER;
+    }
+    n = rogue.yendorWarden->depth - 1;
+    
+    // remove traversing monster from other level monster chain
+    if (rogue.yendorWarden == levels[n].monsters) {
+        levels[n].monsters = rogue.yendorWarden->nextCreature;
+    } else {
+        for (prevMonst = levels[n].monsters; prevMonst->nextCreature != rogue.yendorWarden; prevMonst = prevMonst->nextCreature);
+        prevMonst->nextCreature = rogue.yendorWarden->nextCreature;
+    }
+    
+    if (rogue.yendorWarden->depth > rogue.depthLevel) {
+        rogue.yendorWarden->depth = rogue.depthLevel + 1;
+        n = rogue.yendorWarden->depth - 1;
+        rogue.yendorWarden->bookkeepingFlags |= MB_APPROACHING_UPSTAIRS;
+        rogue.yendorWarden->xLoc = levels[n].downStairsLoc[0];
+        rogue.yendorWarden->yLoc = levels[n].downStairsLoc[1];
+    } else {
+        rogue.yendorWarden->depth = rogue.depthLevel - 1;
+        n = rogue.yendorWarden->depth - 1;
+        rogue.yendorWarden->bookkeepingFlags |= MB_APPROACHING_DOWNSTAIRS;
+        rogue.yendorWarden->xLoc = levels[n].upStairsLoc[0];
+        rogue.yendorWarden->yLoc = levels[n].upStairsLoc[1];
+    }
+    rogue.yendorWarden->nextCreature = levels[rogue.yendorWarden->depth - 1].monsters;
+    levels[rogue.yendorWarden->depth - 1].monsters = rogue.yendorWarden;
+    rogue.yendorWarden->bookkeepingFlags |= MB_PREPLACED;
+    rogue.yendorWarden->status[STATUS_ENTERS_LEVEL_IN] = 50;
+}
+
 // Monsters who are over chasms or other descent tiles won't fall until this is called.
 // This is to avoid having the monster chain change unpredictably in the middle of a turn.
 void monstersFall() {
@@ -1213,7 +1313,7 @@ void monstersFall() {
 	// monsters plunge into chasms at the end of the turn
 	for (monst = monsters->nextCreature; monst != NULL; monst = nextCreature) {
 		nextCreature = monst->nextCreature;
-		if ((monst->bookkeepingFlags & MONST_IS_FALLING) || monsterShouldFall(monst)) {
+		if ((monst->bookkeepingFlags & MB_IS_FALLING) || monsterShouldFall(monst)) {
 			x = monst->xLoc;
 			y = monst->yLoc;
 			
@@ -1222,13 +1322,14 @@ void monstersFall() {
 				sprintf(buf2, "%s plunges out of sight!", buf);
 				messageWithColor(buf2, messageColorFromVictim(monst), false);
 			}
-			monst->bookkeepingFlags |= MONST_PREPLACED;
-			monst->bookkeepingFlags &= ~(MONST_IS_FALLING | MONST_SEIZED | MONST_SEIZING);
+            monst->status[STATUS_ENTRANCED] = 0;
+			monst->bookkeepingFlags |= MB_PREPLACED;
+			monst->bookkeepingFlags &= ~(MB_IS_FALLING | MB_SEIZED | MB_SEIZING);
             monst->targetCorpseLoc[0] = monst->targetCorpseLoc[1] = 0;
             if (monst->info.flags & MONST_GETS_TURN_ON_ACTIVATION) {
                 // Guardians and mirrored totems never survive the fall. If they did, they might block the level below.
                 killCreature(monst, false);
-            } else if (!inflictDamage(monst, randClumpedRange(6, 12, 2), &red, false)) {
+            } else if (!inflictDamage(NULL, monst, randClumpedRange(6, 12, 2), &red, false)) {
 				demoteMonsterFromLeadership(monst);
 				
 				// remove from monster chain
@@ -1242,6 +1343,10 @@ void monstersFall() {
 				levels[rogue.depthLevel-1 + 1].monsters = monst;
 				
 				monst->depth = rogue.depthLevel + 1;
+                
+                if (monst == rogue.yendorWarden) {
+                    updateYendorWardenTracking();
+                }
 			}
 			
 			pmap[x][y].flags &= ~HAS_MONSTER;
@@ -1251,7 +1356,8 @@ void monstersFall() {
 }
 
 void updateEnvironment() {
-	short i, j, direction, newX, newY, promoteChance, promotions[DCOLS][DROWS];
+	short i, j, direction, newX, newY, promotions[DCOLS][DROWS];
+    long promoteChance;
 	enum dungeonLayers layer;
 	floorTileType *tile;
 	boolean isVolumetricGas = false;
@@ -1411,6 +1517,20 @@ void updateAllySafetyMap() {
 	freeGrid(monsterCostMap);
 }
 
+void resetDistanceCellInGrid(short **grid, short x, short y) {
+    enum directions dir;
+    short newX, newY;
+    for (dir = 0; dir < 4; dir++) {
+        newX = x + nbDirs[dir][0];
+        newY = y + nbDirs[dir][1];
+        if (coordinatesAreInMap(newX, newY)
+            && grid[x][y] > grid[newX][newY] + 1) {
+            
+            grid[x][y] = grid[newX][newY] + 1;
+        }
+    }
+}
+
 void updateSafetyMap() {
 	short i, j;
 	short **playerCostMap, **monsterCostMap;
@@ -1453,7 +1573,7 @@ void updateSafetyMap() {
 					}
 				}
 				
-				if (cellHasTerrainFlag(i, j, (T_AUTO_DESCENT | T_IS_DF_TRAP))) {// | T_IS_FIRE))) {
+				if (cellHasTerrainFlag(i, j, (T_AUTO_DESCENT | T_IS_DF_TRAP))) {
 					monsterCostMap[i][j] = PDS_FORBIDDEN;
                     if (player.status[STATUS_LEVITATING]) {
                         playerCostMap[i][j] = 1;
@@ -1474,6 +1594,12 @@ void updateSafetyMap() {
                         playerCostMap[i][j] = 5;
                     }
 					monsterCostMap[i][j] = 5;
+                } else if (cellHasTerrainFlag(i, j, T_OBSTRUCTS_PASSABILITY)
+                           && cellHasTMFlag(i, j, TM_IS_SECRET) && !(discoveredTerrainFlagsAtLoc(i, j) & T_OBSTRUCTS_PASSABILITY)
+                           && !(pmap[i][j].flags & IN_FIELD_OF_VIEW)) {
+                    // Secret door that the player can't currently see
+                    playerCostMap[i][j] = 100;
+                    monsterCostMap[i][j] = 1;
 				} else {
 					playerCostMap[i][j] = monsterCostMap[i][j] = 1;
 				}
@@ -1491,6 +1617,19 @@ void updateSafetyMap() {
 	monsterCostMap[rogue.downLoc[0]][rogue.downLoc[1]] = PDS_FORBIDDEN;
 	
 	dijkstraScan(safetyMap, playerCostMap, false);
+    
+	for (i=0; i<DCOLS; i++) {
+		for (j=0; j<DROWS; j++) {
+            if (cellHasTerrainFlag(i, j, T_OBSTRUCTS_PASSABILITY)
+                && cellHasTMFlag(i, j, TM_IS_SECRET) && !(discoveredTerrainFlagsAtLoc(i, j) & T_OBSTRUCTS_PASSABILITY)
+                && !(pmap[i][j].flags & IN_FIELD_OF_VIEW)) {
+                
+                // Secret doors that the player can't see are not particularly safe themselves;
+                // the areas behind them are.
+                resetDistanceCellInGrid(safetyMap, i, j);
+            }
+        }
+    }
 	
 	for (i=0; i<DCOLS; i++) {
 		for (j=0; j<DROWS; j++) {
@@ -1527,7 +1666,6 @@ void updateSafeTerrainMap() {
 	short i, j;
 	short **costMap;
 	creature *monst;
-	item *theItem;
 	
 	rogue.updatedMapToSafeTerrainThisTurn = true;
 	costMap = allocGrid();
@@ -1535,7 +1673,6 @@ void updateSafeTerrainMap() {
 	for (i=0; i<DCOLS; i++) {
 		for (j=0; j<DROWS; j++) {
 			monst = monsterAtLoc(i, j);
-			theItem = itemAtLoc(i, j);
 			if (cellHasTerrainFlag(i, j, T_OBSTRUCTS_PASSABILITY)
                 && (!cellHasTMFlag(i, j, TM_IS_SECRET) || (discoveredTerrainFlagsAtLoc(i, j) & T_OBSTRUCTS_PASSABILITY))) {
                 
@@ -1548,7 +1685,7 @@ void updateSafeTerrainMap() {
 				rogue.mapToSafeTerrain[i][j] = 30000;
 			} else if (cellHasTerrainFlag(i, j, T_HARMFUL_TERRAIN) || pmap[i][j].layers[DUNGEON] == DOOR) {
 				// The door thing is an aesthetically offensive but necessary hack to make sure
-				// that monsters trying to find their way out of poisonous gas do not sprint for
+				// that monsters trying to find their way out of caustic gas do not sprint for
 				// the doors. Doors are superficially free of gas, but as soon as they are opened,
 				// gas will fill their tile, so they are not actually safe. Without this fix,
 				// allies will fidget back and forth in a doorway while they asphyxiate.
@@ -1565,39 +1702,10 @@ void updateSafeTerrainMap() {
 	freeGrid(costMap);
 }
 
-void rechargeItemsIncrementally() {
-	item *theItem, *autoIdentifyItems[3] = {rogue.armor, rogue.ringLeft, rogue.ringRight};
-	char buf[DCOLS*3], theItemName[DCOLS*3];
-	short rechargeIncrement, staffRechargeAmount, i;
-	
-	if (rogue.wisdomBonus) {
-		rechargeIncrement = (int) (10 * pow(1.3, min(27, rogue.wisdomBonus)) + FLOAT_FUDGE); // at level 27, you recharge anything to full in one turn
-	} else {
-		rechargeIncrement = 10;
-	}
-	
-	for (theItem = packItems->nextItem; theItem != NULL; theItem = theItem->nextItem) {
-		if (theItem->category & STAFF) {
-			if (theItem->enchant2 <= 0) {
-				// if it's time for a recharge
-                if (theItem->charges < theItem->enchant1) {
-                    theItem->charges++;
-                }
-				// staffs of blinking and obstruction recharge half as fast so they're less powerful
-				staffRechargeAmount = (theItem->kind == STAFF_BLINKING || theItem->kind == STAFF_OBSTRUCTION ? 10000 : 5000) / theItem->enchant1;
-                theItem->enchant2 = randClumpedRange(max(staffRechargeAmount / 3, 1), staffRechargeAmount * 5 / 3, 3);
-			} else if (theItem->charges < theItem->enchant1) {
-				theItem->enchant2 -= rechargeIncrement;
-			}
-		} else if ((theItem->category & CHARM) && (theItem->charges > 0)) {
-            theItem->charges--;
-            if (theItem->charges == 0) {
-				itemName(theItem, theItemName, false, false, NULL);
-				sprintf(buf, "your %s has recharged.", theItemName);
-                message(buf, false);
-            }
-        }
-	}
+void processIncrementalAutoID() {
+    item *theItem, *autoIdentifyItems[3] = {rogue.armor, rogue.ringLeft, rogue.ringRight};
+    char buf[DCOLS*3], theItemName[DCOLS*3];
+    short i;
 	
 	for (i=0; i<3; i++) {
 		theItem = autoIdentifyItems[i];
@@ -1627,6 +1735,58 @@ void rechargeItemsIncrementally() {
 	}
 }
 
+short staffChargeDuration(const item *theItem) {
+    // staffs of blinking and obstruction recharge half as fast so they're less powerful
+    return (theItem->kind == STAFF_BLINKING || theItem->kind == STAFF_OBSTRUCTION ? 10000 : 5000) / theItem->enchant1;
+}
+
+// Multiplier can be negative, in which case staffs and charms will be drained instead of recharged.
+void rechargeItemsIncrementally(short multiplier) {
+	item *theItem;
+	char buf[DCOLS*3], theItemName[DCOLS*3];
+	short rechargeIncrement, staffRechargeDuration;
+	
+	if (rogue.wisdomBonus) {
+		rechargeIncrement = ringWisdomMultiplier(rogue.wisdomBonus); // at level 27, you recharge anything to full in one turn
+	} else {
+		rechargeIncrement = 10;
+	}
+    
+    rechargeIncrement *= multiplier;
+	
+	for (theItem = packItems->nextItem; theItem != NULL; theItem = theItem->nextItem) {
+		if (theItem->category & STAFF) {
+            if (theItem->charges < theItem->enchant1 && rechargeIncrement > 0
+                || theItem->charges > 0 && rechargeIncrement < 0) {
+                
+                theItem->enchant2 -= rechargeIncrement;
+            }
+            staffRechargeDuration = staffChargeDuration(theItem);
+            while (theItem->enchant2 <= 0) {
+                // if it's time to add a staff charge
+                if (theItem->charges < theItem->enchant1) {
+                    theItem->charges++;
+                }
+                theItem->enchant2 += randClumpedRange(max(staffRechargeDuration / 3, 1), staffRechargeDuration * 5 / 3, 3);
+            }
+            while (theItem->enchant2 > staffRechargeDuration * 5 / 3) {
+                // if it's time to drain a staff charge
+                if (theItem->charges > 0) {
+                    theItem->charges--;
+                }
+                theItem->enchant2 -= staffRechargeDuration;
+            }
+		} else if ((theItem->category & CHARM) && (theItem->charges > 0)) {
+            theItem->charges = clamp(theItem->charges - multiplier, 0, charmRechargeDelay(theItem->kind, theItem->enchant1));
+            if (theItem->charges == 0) {
+				itemName(theItem, theItemName, false, false, NULL);
+				sprintf(buf, "your %s has recharged.", theItemName);
+                message(buf, false);
+            }
+        }
+	}
+}
+
 void extinguishFireOnCreature(creature *monst) {
 	
 	monst->status[STATUS_BURNING] = 0;
@@ -1646,20 +1806,18 @@ void monsterEntersLevel(creature *monst, short n) {
 	boolean pit = false;
     
     // place traversing monster near the stairs on this level
-    if (monst->bookkeepingFlags & MONST_APPROACHING_DOWNSTAIRS) {
+    if (monst->bookkeepingFlags & MB_APPROACHING_DOWNSTAIRS) {
         monst->xLoc = rogue.upLoc[0];
         monst->yLoc = rogue.upLoc[1];
-    } else if (monst->bookkeepingFlags & MONST_APPROACHING_UPSTAIRS) {
+    } else if (monst->bookkeepingFlags & MB_APPROACHING_UPSTAIRS) {
         monst->xLoc = rogue.downLoc[0];
         monst->yLoc = rogue.downLoc[1];
-    } else if (monst->bookkeepingFlags & MONST_APPROACHING_PIT) { // jumping down pit
+    } else if (monst->bookkeepingFlags & MB_APPROACHING_PIT) { // jumping down pit
         pit = true;
         monst->xLoc = levels[n].playerExitedVia[0];
         monst->yLoc = levels[n].playerExitedVia[1];
     } else {
-#ifdef BROGUE_ASSERTS
-        assert(false);
-#endif
+        brogueAssert(false);
     }
     monst->depth = rogue.depthLevel;
     monst->targetCorpseLoc[0] = monst->targetCorpseLoc[1] = 0;
@@ -1674,9 +1832,7 @@ void monsterEntersLevel(creature *monst, short n) {
         && !(terrainFlags(monst->xLoc, monst->yLoc) & avoidedFlagsForMonster(&(monst->info)))) {
         // Monsters using the stairs will displace any creatures already located there, to thwart stair-dancing.
         prevMonst = monsterAtLoc(monst->xLoc, monst->yLoc);
-#ifdef BROGUE_ASSERTS
-        assert(prevMonst);
-#endif
+        brogueAssert(prevMonst);
         getQualifyingPathLocNear(&(prevMonst->xLoc), &(prevMonst->yLoc), monst->xLoc, monst->yLoc, true,
                                  T_DIVIDES_LEVEL & avoidedFlagsForMonster(&(prevMonst->info)), 0,
                                  avoidedFlagsForMonster(&(prevMonst->info)), (HAS_MONSTER | HAS_PLAYER | HAS_STAIRS), false);
@@ -1699,8 +1855,8 @@ void monsterEntersLevel(creature *monst, short n) {
     monsters->nextCreature = monst;
     
     monst->status[STATUS_ENTERS_LEVEL_IN] = 0;
-    monst->bookkeepingFlags |= MONST_PREPLACED;
-    monst->bookkeepingFlags &= ~MONST_IS_FALLING;
+    monst->bookkeepingFlags |= MB_PREPLACED;
+    monst->bookkeepingFlags &= ~MB_IS_FALLING;
     restoreMonster(monst, NULL, NULL);
     //DEBUG printf("\nPlaced a creature (%s) at (%i, %i).", monst->info.monsterName, monst->xLoc, monst->yLoc);
     monst->ticksUntilTurn = monst->movementSpeed;
@@ -1709,7 +1865,7 @@ void monsterEntersLevel(creature *monst, short n) {
     if (pit) {
         monsterName(monstName, monst, true);
         if (!monst->status[STATUS_LEVITATING]) {
-            if (inflictDamage(monst, randClumpedRange(6, 12, 2), &red, false)) {
+            if (inflictDamage(NULL, monst, randClumpedRange(6, 12, 2), &red, false)) {
                 if (canSeeMonster(monst)) {
                     sprintf(buf, "%s plummets from above and splatters against the ground!", monstName);
                     messageWithColor(buf, messageColorFromVictim(monst), false);
@@ -1744,15 +1900,25 @@ void monstersApproachStairs() {
 			}
 		}
 	}
+    
+    if (rogue.yendorWarden
+        && abs(rogue.depthLevel - rogue.yendorWarden->depth) > 1) {
+        
+        updateYendorWardenTracking();
+    }
 }
 
 void decrementPlayerStatus() {
-	if (player.status[STATUS_NUTRITION] > 0) {
-		if (!numberOfMatchingPackItems(AMULET, 0, 0, false) || rand_percent(20)) {
-			player.status[STATUS_NUTRITION]--;
-		}
-	}
-    checkNutrition();
+    // Handle hunger.
+    if (!player.status[STATUS_PARALYZED]) {
+        // No nutrition is expended while paralyzed.
+        if (player.status[STATUS_NUTRITION] > 0) {
+            if (!numberOfMatchingPackItems(AMULET, 0, 0, false) || rand_percent(20)) {
+                player.status[STATUS_NUTRITION]--;
+            }
+        }
+        checkNutrition();
+    }
 	
 	if (player.status[STATUS_TELEPATHIC] > 0 && !--player.status[STATUS_TELEPATHIC]) {
 		updateVision(true);
@@ -1812,7 +1978,6 @@ void decrementPlayerStatus() {
     }
 	
 	if (player.status[STATUS_IMMUNE_TO_FIRE] > 0 && !--player.status[STATUS_IMMUNE_TO_FIRE]) {
-		//player.info.flags &= ~MONST_IMMUNE_TO_FIRE;
 		message("you no longer feel immune to fire.", false);
 	}
 	
@@ -1826,6 +1991,10 @@ void decrementPlayerStatus() {
 	
 	if (player.status[STATUS_DISCORDANT]) {
 		player.status[STATUS_DISCORDANT]--;
+	}
+    
+	if (player.status[STATUS_AGGRAVATING]) {
+		player.status[STATUS_AGGRAVATING]--;
 	}
 	
 	if (player.status[STATUS_SHIELDED]) {
@@ -1902,6 +2071,19 @@ void synchronizePlayerTimeState() {
     rogue.ticksTillUpdateEnvironment = player.ticksUntilTurn;
 }
 
+void playerRecoversFromAttacking(boolean anAttackHit) {
+    if (player.ticksUntilTurn >= 0) {
+        // Don't do this if the player's weapon of speed just fired.
+        if (rogue.weapon && (rogue.weapon->flags & ITEM_ATTACKS_HIT_SLOWLY) && anAttackHit) {
+            player.ticksUntilTurn += 2 * player.attackSpeed;
+        } else if (rogue.weapon && (rogue.weapon->flags & ITEM_ATTACKS_QUICKLY)) {
+            player.ticksUntilTurn += player.attackSpeed / 2;
+        } else {
+            player.ticksUntilTurn += player.attackSpeed;
+        }
+    }
+}
+
 // This is the dungeon schedule manager, called every time the player's turn comes to an end.
 // It hands control over to monsters until they've all expended their accumulated ticks,
 // updating the environment (gas spreading, flames spreading and burning out, etc.) every
@@ -1913,14 +2095,12 @@ void playerTurnEnded() {
 	boolean fastForward = false;
     short oldRNG;
 	
-#ifdef BROGUE_ASSERTS
-	assert(rogue.RNG == RNG_SUBSTANTIVE);
-#endif
+    brogueAssert(rogue.RNG == RNG_SUBSTANTIVE);
 	
 	handleXPXP();
 	resetDFMessageEligibility();
 	
-	if (player.bookkeepingFlags & MONST_IS_FALLING) {
+	if (player.bookkeepingFlags & MB_IS_FALLING) {
 		playerFalls();
         if (!rogue.gameHasEnded) {
             handleHealthAlerts();
@@ -1977,8 +2157,8 @@ void playerTurnEnded() {
 		
 		for (monst = monsters->nextCreature; monst != NULL; monst = nextMonst) {
 			nextMonst = monst->nextCreature;
-			if ((monst->bookkeepingFlags & MONST_BOUND_TO_LEADER)
-				&& (!monst->leader || !(monst->bookkeepingFlags & MONST_FOLLOWER))
+			if ((monst->bookkeepingFlags & MB_BOUND_TO_LEADER)
+				&& (!monst->leader || !(monst->bookkeepingFlags & MB_FOLLOWER))
 				&& (monst->creatureState != MONSTER_ALLY)) {
 				
 				killCreature(monst, false);
@@ -1992,7 +2172,7 @@ void playerTurnEnded() {
 		
 		if (player.status[STATUS_BURNING] > 0) {
 			damage = rand_range(1, 3);
-			if (!(player.status[STATUS_IMMUNE_TO_FIRE]) && inflictDamage(&player, damage, &orange, true)) {
+			if (!(player.status[STATUS_IMMUNE_TO_FIRE]) && inflictDamage(NULL, &player, damage, &orange, true)) {
 				gameOver("Burned to death", true);
 			}
 			if (!--player.status[STATUS_BURNING]) {
@@ -2003,9 +2183,12 @@ void playerTurnEnded() {
 		
 		if (player.status[STATUS_POISONED] > 0) {
 			player.status[STATUS_POISONED]--;
-			if (inflictDamage(&player, 1, &green, true)) {
+			if (inflictDamage(NULL, &player, player.poisonAmount, &green, true)) {
 				gameOver("Died from poison", true);
 			}
+            if (!player.status[STATUS_POISONED]) {
+                player.poisonAmount = 0;
+            }
 		}
 		
 		if (player.ticksUntilTurn == 0) { // attacking adds ticks elsewhere
@@ -2058,7 +2241,8 @@ void playerTurnEnded() {
 				rogue.ticksTillUpdateEnvironment += 100;
 				
 				// stuff that happens periodically according to an objective time measurement goes here:
-				rechargeItemsIncrementally(); // staffs recharge every so often
+				rechargeItemsIncrementally(1); // staffs recharge every so often
+                processIncrementalAutoID();   // become more familiar with worn armor and rings
 				rogue.monsterSpawnFuse--; // monsters spawn in the level every so often
 				
 				for (monst = monsters->nextCreature; monst != NULL;) {
@@ -2088,7 +2272,7 @@ void playerTurnEnded() {
 				updateEnvironment(); // Update fire and gas, items floating around in water, monsters falling into chasms, etc.
 				decrementPlayerStatus();
 				applyInstantTileEffectsToCreature(&player);
-				if (rogue.gameHasEnded) { // poison gas, lava, trapdoor, etc.
+				if (rogue.gameHasEnded) { // caustic gas, lava, trapdoor, etc.
 					return;
 				}
 				monstersApproachStairs();
@@ -2110,7 +2294,7 @@ void playerTurnEnded() {
                     if ((monst->info.flags & MONST_GETS_TURN_ON_ACTIVATION)
                         || monst->status[STATUS_PARALYZED]
                         || monst->status[STATUS_ENTRANCED]
-                        || (monst->bookkeepingFlags & MONST_CAPTIVE)) {
+                        || (monst->bookkeepingFlags & MB_CAPTIVE)) {
                         
                         // Do not pass go; do not collect 200 gold.
                         monst->ticksUntilTurn = monst->movementSpeed;
@@ -2144,8 +2328,8 @@ void playerTurnEnded() {
         }
 		
 		for(monst = monsters->nextCreature; monst != NULL; monst = monst->nextCreature) {
-			if (canSeeMonster(monst) && !(monst->bookkeepingFlags & (MONST_WAS_VISIBLE))) {
-				monst->bookkeepingFlags |= MONST_WAS_VISIBLE;
+			if (canSeeMonster(monst) && !(monst->bookkeepingFlags & (MB_WAS_VISIBLE | MB_ALREADY_SEEN))) {
+				monst->bookkeepingFlags |= MB_WAS_VISIBLE;
 				if (monst->creatureState != MONSTER_ALLY) {
 					rogue.disturbed = true;
 					if (rogue.cautiousMode || rogue.automationActive) {
@@ -2171,30 +2355,32 @@ void playerTurnEnded() {
 					
 					discover(monst->xLoc, monst->yLoc);
 				}
-				if (rogue.weapon && rogue.weapon->flags & ITEM_RUNIC
-					&& rogue.weapon->enchant2 == W_SLAYING
-					&& !(rogue.weapon->flags & ITEM_RUNIC_HINTED)
-					&& rogue.weapon->vorpalEnemy == monst->info.monsterID) {
-					
-					rogue.weapon->flags |= ITEM_RUNIC_HINTED;
-					itemName(rogue.weapon, buf2, false, false, NULL);
-					sprintf(buf, "the runes on your %s gleam balefully.", buf2);
-					messageWithColor(buf, &itemMessageColor, true);
-				}
-				if (rogue.armor && rogue.armor->flags & ITEM_RUNIC
-					&& rogue.armor->enchant2 == A_IMMUNITY
-					&& !(rogue.armor->flags & ITEM_RUNIC_HINTED)
-					&& rogue.armor->vorpalEnemy == monst->info.monsterID) {
-					
-					rogue.armor->flags |= ITEM_RUNIC_HINTED;
-					itemName(rogue.armor, buf2, false, false, NULL);
-					sprintf(buf, "the runes on your %s glow protectively.", buf2);
-					messageWithColor(buf, &itemMessageColor, true);
-				}
+                if (canDirectlySeeMonster(monst)) {
+                    if (rogue.weapon && rogue.weapon->flags & ITEM_RUNIC
+                        && rogue.weapon->enchant2 == W_SLAYING
+                        && !(rogue.weapon->flags & ITEM_RUNIC_HINTED)
+                        && monsterIsInClass(monst, rogue.weapon->vorpalEnemy)) {
+                        
+                        rogue.weapon->flags |= ITEM_RUNIC_HINTED;
+                        itemName(rogue.weapon, buf2, false, false, NULL);
+                        sprintf(buf, "the runes on your %s gleam balefully.", buf2);
+                        messageWithColor(buf, &itemMessageColor, true);
+                    }
+                    if (rogue.armor && rogue.armor->flags & ITEM_RUNIC
+                        && rogue.armor->enchant2 == A_IMMUNITY
+                        && !(rogue.armor->flags & ITEM_RUNIC_HINTED)
+                        && monsterIsInClass(monst, rogue.armor->vorpalEnemy)) {
+                        
+                        rogue.armor->flags |= ITEM_RUNIC_HINTED;
+                        itemName(rogue.armor, buf2, false, false, NULL);
+                        sprintf(buf, "the runes on your %s glow protectively.", buf2);
+                        messageWithColor(buf, &itemMessageColor, true);
+                    }
+                }
 			} else if (!canSeeMonster(monst)
-					   && (monst->bookkeepingFlags & MONST_WAS_VISIBLE)
-					   && !(monst->bookkeepingFlags & MONST_CAPTIVE)) {
-				monst->bookkeepingFlags &= ~MONST_WAS_VISIBLE;
+					   && (monst->bookkeepingFlags & MB_WAS_VISIBLE)
+					   && !(monst->bookkeepingFlags & MB_CAPTIVE)) {
+				monst->bookkeepingFlags &= ~MB_WAS_VISIBLE;
 			}
 		}
 		
@@ -2216,7 +2402,7 @@ void playerTurnEnded() {
 		refreshSideBar(-1, -1, false);
 		
 		applyInstantTileEffectsToCreature(&player);
-		if (rogue.gameHasEnded) { // poison gas, lava, trapdoor, etc.
+		if (rogue.gameHasEnded) { // caustic gas, lava, trapdoor, etc.
 			return;
 		}
         
@@ -2224,7 +2410,7 @@ void playerTurnEnded() {
             player.currentHP = player.info.maxHP;
         }
         
-        if (player.bookkeepingFlags & MONST_IS_FALLING) {
+        if (player.bookkeepingFlags & MB_IS_FALLING) {
             playerFalls();
             handleHealthAlerts();
             return;
@@ -2274,13 +2460,13 @@ void playerTurnEnded() {
 
 void resetScentTurnNumber() { // don't want player.scentTurnNumber to roll over the short maxint!
 	short i, j, d;
-	rogue.scentTurnNumber -= 20000;
+	rogue.scentTurnNumber -= 15000;
     for (d = 0; d < DEEPEST_LEVEL; d++) {
         if (levels[d].visited) {
             for (i=0; i<DCOLS; i++) {
                 for (j=0; j<DROWS; j++) {
-                    if (levels[d].scentMap[i][j] > 20000) {
-                        levels[d].scentMap[i][j] -= 20000;
+                    if (levels[d].scentMap[i][j] > 15000) {
+                        levels[d].scentMap[i][j] -= 15000;
                     } else {
                         levels[d].scentMap[i][j] = 0;
                     }

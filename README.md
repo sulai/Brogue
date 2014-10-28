@@ -1,7 +1,7 @@
 Brogue
 ======
 
-This is a fork of Brian Walker's "Brogue", a wonderful roguelike game.
+This is a fork of Brian Walker's "Brogue", a modern roguelike with a strong focus on simple user interface and unique game play.
 
 
 Description of the folder layout

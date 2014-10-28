@@ -2,6 +2,7 @@
 bin/linux/libtcod.so
 bin/windows/SDL.dll
 bin/windows/libtcod-mingw.dll
+src/libtcod-1.5.1
 src/libtcod-1.5.2
 *.tar.gz
 *.o

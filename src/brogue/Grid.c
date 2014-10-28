@@ -118,9 +118,7 @@ short floodFillGrid(short **grid, short x, short y, short eligibleValueMin, shor
     enum directions dir;
 	short newX, newY, fillCount = 1;
     
-#ifdef BROGUE_ASSERTS
-    assert(fillValue < eligibleValueMin || fillValue > eligibleValueMax);
-#endif
+    brogueAssert(fillValue < eligibleValueMin || fillValue > eligibleValueMax);
     
     grid[x][y] = fillValue;
     for (dir = 0; dir < 4; dir++) {
@@ -407,7 +405,7 @@ void cellularAutomataRound(short **grid, char birthParameters[9], char survivalP
     for(i=0; i<DCOLS; i++) {
         for(j=0; j<DROWS; j++) {
             nbCount = 0;
-            for (dir=0; dir<8; dir++) {
+            for (dir=0; dir< DIRECTION_COUNT; dir++) {
                 newX = i + nbDirs[dir][0];
                 newY = j + nbDirs[dir][1];
                 if (coordinatesAreInMap(newX, newY)

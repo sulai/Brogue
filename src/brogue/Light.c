@@ -60,9 +60,7 @@ boolean paintLight(lightSource *theLight, short x, short y, boolean isMinersLigh
 	char grid[DCOLS][DROWS];
 	boolean dispelShadows, overlappedFieldOfView;
 	
-#ifdef BROGUE_ASSERTS
-	assert(rogue.RNG == RNG_SUBSTANTIVE);
-#endif
+    brogueAssert(rogue.RNG == RNG_SUBSTANTIVE);
 	
 	radius = randClump(theLight->lightRadius);
 	radius /= 100;
@@ -240,9 +238,12 @@ void updateLighting() {
 	
 	// Cycle through monsters and paint their lights:
 	CYCLE_MONSTERS_AND_PLAYERS(monst) {	
-		if (monst->info.flags & MONST_INTRINSIC_LIGHT) {
+		if (monst->info.intrinsicLightType) {
 			paintLight(&lightCatalog[monst->info.intrinsicLightType], monst->xLoc, monst->yLoc, false, false);
 		}
+        if (monst->mutationIndex >= 0 && mutationCatalog[monst->mutationIndex].light != NO_LIGHT) {
+            paintLight(&lightCatalog[mutationCatalog[monst->mutationIndex].light], monst->xLoc, monst->yLoc, false, false);
+        }
 		
 		if (monst->status[STATUS_BURNING] && !(monst->info.flags & MONST_FIERY)) {
 			paintLight(&lightCatalog[BURNING_CREATURE_LIGHT], monst->xLoc, monst->yLoc, false, false);
@@ -346,12 +347,12 @@ boolean updateFlare(flare *theFlare) {
 // Returns whether it overlaps with the field of view.
 boolean drawFlareFrame(flare *theFlare) {
     boolean inView;
+    lightSource tempLight = *(theFlare->light);
+    color tempColor = *(tempLight.lightColor);
+    
     if (!flareIsActive(theFlare)) {
         return false;
     }
-    
-    lightSource tempLight = *(theFlare->light);
-    color tempColor = *(tempLight.lightColor);
     tempLight.lightRadius.lowerBound = ((long) tempLight.lightRadius.lowerBound) * theFlare->coeff / (flarePrecision * 100);
     tempLight.lightRadius.upperBound = ((long) tempLight.lightRadius.upperBound) * theFlare->coeff / (flarePrecision * 100);
     applyColorScalar(&tempColor, theFlare->coeff / flarePrecision);
@@ -367,9 +368,7 @@ void animateFlares(flare **flares, short count) {
     boolean inView, fastForward, atLeastOneFlareStillActive;
     short i; // i iterates through the flare list
     
-#ifdef BROGUE_ASSERTS
-    assert(rogue.RNG == RNG_SUBSTANTIVE);
-#endif
+    brogueAssert(rogue.RNG == RNG_SUBSTANTIVE);
     
     backUpLighting(lights);
     fastForward = rogue.trueColorMode || rogue.playbackFastForward;
