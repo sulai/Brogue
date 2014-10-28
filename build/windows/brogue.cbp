@@ -7,9 +7,9 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release">
-				<Option output="bin\windows\brogue" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="..\..\" />
-				<Option object_output="obj\Release\" />
+				<Option output="../../bin/windows/brogue" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../../" />
+				<Option object_output="../../obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -17,77 +17,80 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-O2" />
 					<Add option="-DBROGUE_TCOD" />
-					<Add directory="src\brogue" />
-					<Add directory="src\platform" />
-					<Add directory="src\libtcod-1.5.2\include" />
-					<Add directory="src\SDL-1.2.14\include" />
+					<Add directory="../../src/brogue" />
+					<Add directory="../../src/platform" />
+					<Add directory="../../src/libtcod-1.5.2/include" />
+					<Add directory="../../src/SDL-1.2.14/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="src\libtcod-1.5.1\lib\libtcod-mingw.a" />
-					<Add library="src\SDL-1.2.14\lib\libSDL.dll.a" />
+					<Add library="..\..\src\libtcod-1.5.1\lib\libtcod-mingw.a" />
+					<Add library="..\..\src\SDL-1.2.14\lib\libSDL.dll.a" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="..\..\src\brogue\Architect.c">
+		<Unit filename="../../src/brogue/Architect.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Buttons.c">
+		<Unit filename="../../src/brogue/Buttons.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Combat.c">
+		<Unit filename="../../src/brogue/Combat.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Dijkstra.c">
+		<Unit filename="../../src/brogue/Dijkstra.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Globals.c">
+		<Unit filename="../../src/brogue/Globals.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Grid.c">
+		<Unit filename="../../src/brogue/Grid.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\IO.c">
+		<Unit filename="../../src/brogue/IO.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\IncludeGlobals.h" />
-		<Unit filename="..\..\src\brogue\Items.c">
+		<Unit filename="../../src/brogue/IncludeGlobals.h" />
+		<Unit filename="../../src/brogue/Items.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Light.c">
+		<Unit filename="../../src/brogue/Light.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\MainMenu.c">
+		<Unit filename="../../src/brogue/MainMenu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Monsters.c">
+		<Unit filename="../../src/brogue/Monsters.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Movement.c">
+		<Unit filename="../../src/brogue/Movement.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Random.c">
+		<Unit filename="../../src/brogue/Random.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Recordings.c">
+		<Unit filename="../../src/brogue/Recordings.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\brogue\Rogue.h" />
-		<Unit filename="..\..\src\brogue\RogueMain.c">
+		<Unit filename="../../src/brogue/Rogue.h" />
+		<Unit filename="../../src/brogue/RogueMain.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\platform\PlatformDefines.h" />
-		<Unit filename="..\..\src\platform\main.c">
+		<Unit filename="../../src/brogue/Time.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\platform\platform.h" />
-		<Unit filename="..\..\src\platform\platformdependent.c">
+		<Unit filename="../../src/platform/PlatformDefines.h" />
+		<Unit filename="../../src/platform/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\platform\tcod-platform.c">
+		<Unit filename="../../src/platform/platform.h" />
+		<Unit filename="../../src/platform/platformdependent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/platform/tcod-platform.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="icon.rc">
@@ -96,6 +99,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
