@@ -1096,6 +1096,9 @@ enum tileFlags {
 #define ASCEND_KEY			'<'
 #define REST_KEY			'z'
 #define AUTO_REST_KEY		'Z'
+#define ALLY_GUARD_KEY		'g'
+#define ALLY_FOLLOW_KEY		'f'
+#define ALLY_COMMAND_KEY	'C'
 #define SEARCH_KEY			's'
 #define INVENTORY_KEY		'i'
 #define ACKNOWLEDGE_KEY		' '
@@ -2179,8 +2182,6 @@ typedef struct creature {
 	// ally specific
 	short xAllyCommand;
 	short yAllyCommand;
-	unsigned long absoluteTurnFreed;  // the turn this creature was made an ally
-
 } creature;
 
 enum NGCommands {
@@ -2874,6 +2875,10 @@ extern "C" {
 	void resolvePronounEscapes(char *text, creature *monst);
 	short pickHordeType(short depth, enum monsterTypes summonerType, unsigned long forbiddenFlags, unsigned long requiredFlags);
 	creature *cloneMonster(creature *monst, boolean announce, boolean placeClone);
+    short talkToAllies(const short maxDistance, int allyStatus, short turns, short friendBonusDivisor);
+    short commandNearbyAllies(const short maxDistance, int allyStatus, short turns, short friendBonusDivisor);
+    void wakeupNearbyMonsters(const short distance);
+    void allyCommand();
     void empowerMonster(creature *monst);
 	unsigned long forbiddenFlagsForMonster(creatureType *monsterType);
     unsigned long avoidedFlagsForMonster(creatureType *monsterType);

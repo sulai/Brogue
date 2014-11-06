@@ -2488,17 +2488,17 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 		case AUTOPLAY_KEY:
 			autoPlayLevel(controlKey);
 			break;
-		case 'f': // follow me! (short leash)
-			communicateNearbyAllies(100, STATUS_ALLY_FOLLOW, 0, 100);
-			recordKeystroke('F', false, true);
+		case ALLY_FOLLOW_KEY: // follow me! (short leash)
+			talkToAllies(100, STATUS_ALLY_FOLLOW, 1, 75);
+			recordKeystroke(ALLY_FOLLOW_KEY, false, true);
 			playerTurnEnded();
 			break;
-		case 'g': // stand guard!
-			communicateNearbyAllies(100, STATUS_ALLY_GUARDING, 0, 10);
-			recordKeystroke('g', false, true);
+		case ALLY_GUARD_KEY: // stand guard!
+			talkToAllies(100, STATUS_ALLY_GUARDING, 1, 7);
+			recordKeystroke(ALLY_GUARD_KEY, false, true);
 			playerTurnEnded();
 			break;
-		case 'C': // command key
+		case ALLY_COMMAND_KEY: // command key
 			allyCommand();
 			break;
 		case MESSAGE_ARCHIVE_KEY:

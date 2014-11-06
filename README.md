@@ -3,6 +3,18 @@ Brogue
 
 This is a fork of Brian Walker's "Brogue", a modern roguelike with a strong focus on simple user interface and unique game play.
 
+This Branch
+===========
+New ally control commands.
+
+* command your allies to stand guard with `g`
+    * they will stay in a 10 tile radius from where they were issued the command
+* command your allies to follow you closely with `f`
+    * they will try to stay within 2 tiles of you, where normally they would stay within 10
+* open command dialog with 'C', featuring further commands (pause! attack! run!)
+* each command will last a period of time proportional to the ally's exploration experience (XPXP)
+* these commands will wake up any enemies that are between you and your furthest ally
+
 
 Description of the folder layout
 ================================

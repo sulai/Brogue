@@ -496,6 +496,123 @@ short pickHordeType(short depth, enum monsterTypes summonerType, unsigned long f
 	return 0; // should never happen
 }
 
+short talkToAllies(const short maxDistance, int allyStatus, short turns, short friendBonusDivisor) {
+    short maxAllyDistance = 0;
+
+    //shout to allies, and wake up any monsters in between you and your allies
+    maxAllyDistance = commandNearbyAllies(maxDistance, allyStatus, turns, friendBonusDivisor);
+    wakeupNearbyMonsters(maxAllyDistance);
+
+    char msg[100];
+
+	if (maxAllyDistance == 0) strcpy(msg, "You quietly whisper to yourself. Nobody answers.");
+	else if(maxAllyDistance < maxDistance * 1/10) strcpy(msg, "You whisper to your allies, ");
+	else if(maxAllyDistance < maxDistance * 1/3) strcpy(msg, "You tell your allies, ");
+	else strcpy(msg, "You shout to your allies, ");
+
+	if(maxAllyDistance>0) {
+		if (allyStatus == STATUS_ALLY_FOLLOW) strcat(msg, "\"Follow me!\"");
+		if (allyStatus == STATUS_ALLY_GUARDING) strcat(msg, "\"Stand guard!\"");
+	}
+
+    messageWithColor(msg, &itemMessageColor, false);
+
+    return maxAllyDistance;
+}
+
+short commandNearbyAllies(const short maxDistance, int allyStatus, short turns, short friendBonusDivisor) {
+    creature *monst;
+    short maxAllyDistance = 0;
+    short distanceToPlayer = 0;
+
+    monst = monsters->nextCreature;
+    while (monst != NULL) {
+        //don't consider allies that are out of line of sight (line of shouting?)
+        if (!(pmap[monst->xLoc][monst->yLoc].flags & IN_FIELD_OF_VIEW)) {
+            monst = monst->nextCreature;
+            continue;
+        }
+
+        //don't try to talk to monsters who aren't allies
+        if (monst->creatureState != MONSTER_ALLY) {
+            monst = monst->nextCreature;
+            continue;
+        }
+
+        //can't talk to guardian charm or staff of conjuring monsters
+        if (monst->bookkeepingFlags & MB_DOES_NOT_TRACK_LEADER) {
+            monst = monst->nextCreature;
+            continue;
+        }
+
+        //can't talk to allies that are outside of shouting distance
+        short xDelta = player.xLoc - monst->xLoc;
+        short yDelta = player.yLoc - monst->yLoc;
+        distanceToPlayer = sqrt(xDelta * xDelta + yDelta * yDelta);
+        if (distanceToPlayer > maxDistance) {
+            monst = monst->nextCreature;
+            continue;
+        }
+
+        if (distanceToPlayer > maxAllyDistance) {
+            maxAllyDistance = distanceToPlayer;
+        }
+
+        monst->status[STATUS_ALLY_FOLLOW] = 0;
+        monst->status[STATUS_ALLY_GUARDING] = 0;
+
+        if (allyStatus != 0) {
+            unsigned long friendBonus = monst->xpxp;
+            friendBonus = friendBonus / friendBonusDivisor;
+            monst->status[allyStatus] = monst->maxStatus[allyStatus] = friendBonus + turns;
+        }
+
+        monst->xAllyCommand = monst->xLoc;
+        monst->yAllyCommand = monst->yLoc;
+        
+        monst = monst->nextCreature;
+    }
+
+    return maxAllyDistance;
+}
+
+void wakeupNearbyMonsters(const short distance) {
+    creature *monst;
+    short distanceToPlayer = 0;
+
+    monst = monsters->nextCreature;
+    while (monst != NULL) {
+        if (!(pmap[monst->xLoc][monst->yLoc].flags & IN_FIELD_OF_VIEW)) {
+            monst = monst->nextCreature;
+            continue;
+        }
+
+        short xDelta = player.xLoc - monst->xLoc;
+        short yDelta = player.yLoc - monst->yLoc;
+        distanceToPlayer = sqrt(xDelta * xDelta + yDelta * yDelta);
+        if (distanceToPlayer <= distance) {
+        	wakeUp(monst);
+        }
+
+        monst = monst->nextCreature;
+    }
+}
+
+void allyCommand() {
+	short actionKey = printCommandDialog(NULL, max(2, mapToWindowX(DCOLS - 30 - 42)), mapToWindowY(2), 30, 10);
+	short allyStatus = 0;
+	if(actionKey=='f') allyStatus = STATUS_ALLY_FOLLOW;
+	else if(actionKey=='g') allyStatus = STATUS_ALLY_GUARDING;
+	else if(actionKey=='r') allyStatus = STATUS_ALLY_RUN;
+	else if(actionKey=='p') allyStatus = STATUS_ALLY_PAUSE;
+	else if(actionKey=='a') allyStatus = STATUS_ALLY_ATTACK;
+	else return;
+	talkToAllies(100, allyStatus, 1, 50);
+	recordKeystroke('C', false, true);
+	recordKeystroke(actionKey, false, false);
+	playerTurnEnded();
+}
+
 void empowerMonster(creature *monst) {
     char theMonsterName[100], buf[200];
     monst->info.maxHP += 15;
@@ -2999,16 +3116,15 @@ void moveAlly(creature *monst) {
 			monst->bookkeepingFlags |= MB_GIVEN_UP_ON_SCENT;
 			pathTowardCreature(monst, monst->leader);
 		} else {
-			if(!monst->status[STATUS_ALLY_GUARDING]) {
-				targetLoc[0] = x + nbDirs[dir][0];
-				targetLoc[1] = y + nbDirs[dir][1];
-				moveMonsterPassivelyTowards(monst, targetLoc, false);
-			}
-			else {
+            targetLoc[0] = x + nbDirs[dir][0];
+            targetLoc[1] = y + nbDirs[dir][1];
+
+			if(monst->status[STATUS_ALLY_GUARDING]) {
 				targetLoc[0] = monst->xAllyCommand;
 				targetLoc[1] = monst->yAllyCommand;
-				moveMonsterPassivelyTowards(monst, targetLoc, false);
 			}
+
+            moveMonsterPassivelyTowards(monst, targetLoc, false);
 		}
 	}
 }

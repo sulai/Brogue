@@ -526,7 +526,6 @@ void becomeAllyWith(creature *monst) {
 	monst->bookkeepingFlags |= MB_FOLLOWER;
 	monst->leader = &player;
 	monst->bookkeepingFlags &= ~(MB_CAPTIVE | MB_SEIZED);
-	monst->absoluteTurnFreed = rogue.absoluteTurnNumber;
 	refreshDungeonCell(monst->xLoc, monst->yLoc);
 }
 
