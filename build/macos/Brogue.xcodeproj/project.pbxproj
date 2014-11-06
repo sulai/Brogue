@@ -39,31 +39,31 @@
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		5852BB40118650A10064384E /* Architect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = Architect.c; path = BrogueCode/Architect.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		5852BB41118650A10064384E /* Combat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Combat.c; path = BrogueCode/Combat.c; sourceTree = "<group>"; };
-		5852BB42118650A10064384E /* Globals.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Globals.c; path = BrogueCode/Globals.c; sourceTree = "<group>"; };
-		5852BB43118650A10064384E /* IncludeGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IncludeGlobals.h; path = BrogueCode/IncludeGlobals.h; sourceTree = "<group>"; };
-		5852BB44118650A10064384E /* IO.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = IO.c; path = BrogueCode/IO.c; sourceTree = "<group>"; };
-		5852BB45118650A10064384E /* Items.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Items.c; path = BrogueCode/Items.c; sourceTree = "<group>"; };
-		5852BB46118650A10064384E /* Light.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Light.c; path = BrogueCode/Light.c; sourceTree = "<group>"; };
-		5852BB47118650A10064384E /* Monsters.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Monsters.c; path = BrogueCode/Monsters.c; sourceTree = "<group>"; };
-		5852BB48118650A10064384E /* Movement.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Movement.c; path = BrogueCode/Movement.c; sourceTree = "<group>"; };
-		5852BB49118650A10064384E /* Rogue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rogue.h; path = BrogueCode/Rogue.h; sourceTree = "<group>"; };
-		5852BB4A118650A10064384E /* RogueMain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = RogueMain.c; path = BrogueCode/RogueMain.c; sourceTree = "<group>"; };
-		5852BB5A118650D90064384E /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = PlatformCode/main.m; sourceTree = "<group>"; };
-		5852BB5C118650D90064384E /* RogueDriver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RogueDriver.h; path = PlatformCode/RogueDriver.h; sourceTree = "<group>"; };
-		5852BB5D118650D90064384E /* RogueDriver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RogueDriver.m; path = PlatformCode/RogueDriver.m; sourceTree = "<group>"; };
-		5852BB5E118650D90064384E /* Viewport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Viewport.h; path = PlatformCode/Viewport.h; sourceTree = "<group>"; };
-		5852BB5F118650D90064384E /* Viewport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Viewport.m; path = PlatformCode/Viewport.m; sourceTree = "<group>"; };
-		5852BB9B118652BA0064384E /* Dijkstra.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Dijkstra.c; path = BrogueCode/Dijkstra.c; sourceTree = "<group>"; };
+		5852BB40118650A10064384E /* Architect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = Architect.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		5852BB41118650A10064384E /* Combat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Combat.c; sourceTree = "<group>"; };
+		5852BB42118650A10064384E /* Globals.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Globals.c; sourceTree = "<group>"; };
+		5852BB43118650A10064384E /* IncludeGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludeGlobals.h; sourceTree = "<group>"; };
+		5852BB44118650A10064384E /* IO.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IO.c; sourceTree = "<group>"; };
+		5852BB45118650A10064384E /* Items.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Items.c; sourceTree = "<group>"; };
+		5852BB46118650A10064384E /* Light.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Light.c; sourceTree = "<group>"; };
+		5852BB47118650A10064384E /* Monsters.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Monsters.c; sourceTree = "<group>"; };
+		5852BB48118650A10064384E /* Movement.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Movement.c; sourceTree = "<group>"; };
+		5852BB49118650A10064384E /* Rogue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Rogue.h; sourceTree = "<group>"; };
+		5852BB4A118650A10064384E /* RogueMain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RogueMain.c; sourceTree = "<group>"; };
+		5852BB5A118650D90064384E /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		5852BB5C118650D90064384E /* RogueDriver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RogueDriver.h; sourceTree = "<group>"; };
+		5852BB5D118650D90064384E /* RogueDriver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RogueDriver.m; sourceTree = "<group>"; };
+		5852BB5E118650D90064384E /* Viewport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Viewport.h; sourceTree = "<group>"; };
+		5852BB5F118650D90064384E /* Viewport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Viewport.m; sourceTree = "<group>"; };
+		5852BB9B118652BA0064384E /* Dijkstra.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Dijkstra.c; sourceTree = "<group>"; };
 		58831147109E46C800FF029E /* Brogue Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "Brogue Icon.icns"; sourceTree = "<group>"; };
-		58A17EDA1235ACA100647687 /* Recordings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Recordings.c; path = BrogueCode/Recordings.c; sourceTree = "<group>"; };
-		58CA453411A8C4F9006D03FC /* PlatformDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PlatformDefines.h; path = PlatformCode/PlatformDefines.h; sourceTree = "<group>"; };
-		58EE4FF6120E01FB0020458E /* Random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Random.c; path = BrogueCode/Random.c; sourceTree = "<group>"; };
-		694753051672E75D003BE7CB /* Grid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Grid.c; path = BrogueCode/Grid.c; sourceTree = "<group>"; };
-		696F73E714C27D9F00CF8C90 /* MainMenu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = MainMenu.c; path = BrogueCode/MainMenu.c; sourceTree = "<group>"; };
-		69A642201476EC76006246FB /* Buttons.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Buttons.c; path = BrogueCode/Buttons.c; sourceTree = "<group>"; };
-		69C741491775466100CD2D5F /* Time.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Time.c; path = BrogueCode/Time.c; sourceTree = "<group>"; };
+		58A17EDA1235ACA100647687 /* Recordings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Recordings.c; sourceTree = "<group>"; };
+		58CA453411A8C4F9006D03FC /* PlatformDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlatformDefines.h; sourceTree = "<group>"; };
+		58EE4FF6120E01FB0020458E /* Random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Random.c; sourceTree = "<group>"; };
+		694753051672E75D003BE7CB /* Grid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Grid.c; sourceTree = "<group>"; };
+		696F73E714C27D9F00CF8C90 /* MainMenu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MainMenu.c; sourceTree = "<group>"; };
+		69A642201476EC76006246FB /* Buttons.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buttons.c; sourceTree = "<group>"; };
+		69C741491775466100CD2D5F /* Time.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Time.c; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Brogue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Brogue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -91,6 +91,7 @@
 				58CA453411A8C4F9006D03FC /* PlatformDefines.h */,
 			);
 			name = "Platform Code";
+			path = ../../src/platform/macos;
 			sourceTree = "<group>";
 		};
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
@@ -154,6 +155,7 @@
 				694753051672E75D003BE7CB /* Grid.c */,
 			);
 			name = "Brogue Code";
+			path = ../../src/brogue;
 			sourceTree = "<group>";
 		};
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
@@ -291,8 +293,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = ../../bin/macos;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -326,7 +328,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = Brogue;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
@@ -336,8 +338,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = ../../bin/macos;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = RogueCocoa_Prefix.pch;
@@ -349,7 +351,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = Brogue;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Release;
@@ -358,7 +360,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_ANALYZER_DEADCODE_DEADSTORES = NO;
+				CONFIGURATION_BUILD_DIR = ../../bin/macos;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -374,7 +376,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_ANALYZER_DEADCODE_DEADSTORES = NO;
+				CONFIGURATION_BUILD_DIR = ../../bin/macos;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
