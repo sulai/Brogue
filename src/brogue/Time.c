@@ -153,7 +153,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
 			message(buf, true);
 			sprintf(buf, "Killed by %s",
 					tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_LAVA_INSTA_DEATH)]].description);
-			gameOver(buf, true);
+			gameOver(buf, true, RS_TELEPORT);
 			return;
 		} else { // it's a monster
 			if (canSeeMonster(monst)) {
@@ -290,7 +290,7 @@ void applyInstantTileEffectsToCreature(creature *monst) {
             } else if (inflictDamage(NULL, &player, damage, &yellow, false)) {
 				strcpy(buf2, tileCatalog[pmap[*x][*y].layers[layerWithFlag(*x, *y, T_CAUSES_EXPLOSIVE_DAMAGE)]].description);
 				sprintf(buf, "Killed by %s", buf2);
-				gameOver(buf, true);
+				gameOver(buf, true, RS_TELEPORT);
 				return;
 			}
 		} else { // it's a monster
@@ -478,7 +478,7 @@ void applyGradualTileEffectsToCreature(creature *monst, short ticks) {
                 messageWithColor(tileCatalog[pmap[x][y].layers[layer]].flavorText, &badMessageColor, false);
                 if (inflictDamage(NULL, &player, damage, tileCatalog[pmap[x][y].layers[layer]].backColor, true)) {
                     sprintf(buf, "Killed by %s", tileCatalog[pmap[x][y].layers[layer]].description);
-                    gameOver(buf, true);
+                    gameOver(buf, true, RS_TELEPORT);
                     return;
                 }
             }
@@ -958,7 +958,7 @@ void playerFalls() {
         damage = randClumpedRange(FALL_DAMAGE_MIN, FALL_DAMAGE_MAX, 2);
         messageWithColor("You are damaged by the fall.", &badMessageColor, false);
         if (inflictDamage(NULL, &player, damage, &red, false)) {
-            gameOver("Killed by a fall", true);
+            gameOver("Killed by a fall", true, RS_IN_PLACE);
         } else if (rogue.depthLevel > rogue.deepestLevel) {
             rogue.deepestLevel = rogue.depthLevel;
         }
@@ -2008,6 +2008,10 @@ void decrementPlayerStatus() {
 		message("you are no longer invisible.", false);
 	}
 	
+	if (player.status[STATUS_MORTAL] > 0 && !--player.status[STATUS_MORTAL]) {
+		message("you are immortal.", false);
+	}
+
 	if (rogue.monsterSpawnFuse <= 0) {
 		spawnPeriodicHorde();
 		rogue.monsterSpawnFuse = rand_range(125, 175);
@@ -2133,7 +2137,7 @@ void playerTurnEnded() {
 		if (player.status[STATUS_NUTRITION] <= 0) {
 			player.currentHP--;
 			if (player.currentHP <= 0) {
-				gameOver("Starved to death", true);
+				gameOver("Starved to death", true, RS_IN_PLACE);
 				return;
 			}
 		} else if (player.currentHP < player.info.maxHP
@@ -2173,7 +2177,7 @@ void playerTurnEnded() {
 		if (player.status[STATUS_BURNING] > 0) {
 			damage = rand_range(1, 3);
 			if (!(player.status[STATUS_IMMUNE_TO_FIRE]) && inflictDamage(NULL, &player, damage, &orange, true)) {
-				gameOver("Burned to death", true);
+				gameOver("Burned to death", true, RS_TELEPORT);
 			}
 			if (!--player.status[STATUS_BURNING]) {
 				player.status[STATUS_BURNING]++; // ugh
@@ -2184,7 +2188,7 @@ void playerTurnEnded() {
 		if (player.status[STATUS_POISONED] > 0) {
 			player.status[STATUS_POISONED]--;
 			if (inflictDamage(NULL, &player, player.poisonAmount, &green, true)) {
-				gameOver("Died from poison", true);
+				gameOver("Died from poison", true, RS_TELEPORT);
 			}
             if (!player.status[STATUS_POISONED]) {
                 player.poisonAmount = 0;

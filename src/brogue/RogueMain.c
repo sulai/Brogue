@@ -392,7 +392,8 @@ void initializeRogue(unsigned long seed) {
 	rogue.autoPlayingLevel = false;
 	rogue.automationActive = false;
 	rogue.justRested = false;
-	rogue.easyMode = false;
+	rogue.easyMode1 = false;
+	rogue.easyMode2 = false;
 	rogue.inWater = false;
 	rogue.creaturesWillFlashThisTurn = false;
 	rogue.updatedSafetyMapThisTurn = false;
@@ -1039,7 +1040,7 @@ void freeEverything() {
     levels = NULL;
 }
 
-void gameOver(char *killedBy, boolean useCustomPhrasing) {
+void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes resurrection) {
     short i, y;
 	char buf[200], highScoreText[200], buf2[200];
 	rogueHighScoresEntry theEntry;
@@ -1048,6 +1049,19 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 	rogueEvent theEvent;
     item *theItem;
     
+    // check for resurrection
+    if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
+    	rogue.gold = rogue.gold / 2;
+    	gameOverSurvive();
+    	if(resurrection==RS_TELEPORT) {
+    		teleport(&player, -1, -1, true);
+    	}
+    	player.status[STATUS_MORTAL]=200;
+    	player.maxStatus[STATUS_MORTAL]=200;
+    	rogue.autoPlayingLevel = false;
+    	return;
+    }
+
     if (player.bookkeepingFlags & MB_IS_DYING) {
         // we've already been through this once; let's avoid overkill.
         return;
@@ -1107,12 +1121,7 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
     rogue.creaturesWillFlashThisTurn = false;
 	
 	if (D_IMMORTAL && !rogue.quit) {
-		message("...but then you get better.", false);
-		player.currentHP = player.info.maxHP;
-		if (player.status[STATUS_NUTRITION] < 10) {
-			player.status[STATUS_NUTRITION] = STOMACH_SIZE;
-		}
-		player.bookkeepingFlags &= ~MB_IS_DYING;
+		gameOverSurvive();
 		return;
 	}
 	
@@ -1135,8 +1144,8 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 				rogue.depthLevel);
 	}
     theEntry.score = rogue.gold;
-	if (rogue.easyMode) {
-		theEntry.score /= 10;
+	if (rogue.easyMode2) {
+		theEntry.score /= 5;
 	}
     strcpy(highScoreText, buf);
     if (theEntry.score > 0) {
@@ -1178,6 +1187,15 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 	}
 	
 	rogue.gameHasEnded = true;
+}
+
+void gameOverSurvive() {
+	message("...but then you get better.", false);
+	player.currentHP = player.info.maxHP;
+	if (player.status[STATUS_NUTRITION] < 10) {
+		player.status[STATUS_NUTRITION] = STOMACH_SIZE;
+	}
+	player.bookkeepingFlags &= ~MB_IS_DYING;
 }
 
 void victory(boolean superVictory) {
@@ -1269,8 +1287,8 @@ void victory(boolean superVictory) {
 	
 	theEntry.score = totalValue;
 	
-	if (rogue.easyMode) {
-		theEntry.score /= 10;
+	if (rogue.easyMode2) {
+		theEntry.score /= 5;
 	}
 	
 	if (!DEBUGGING && !rogue.playbackMode) {
@@ -1292,21 +1310,33 @@ void victory(boolean superVictory) {
 }
 
 void enableEasyMode() {
-	if (rogue.easyMode) {
+	if (rogue.easyMode2) {
 		message("Alas, all hope of salvation is lost. You shed scalding tears at your plight.", false);
 		return;
 	}
 	message("A dark presence surrounds you, whispering promises of stolen power.", true);
-	if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode)?", false)) {
-		recordKeystroke(EASY_MODE_KEY, false, true);
-		message("An ancient and terrible evil burrows into your willing flesh!", true);
-		player.info.displayChar = '&';
-		rogue.easyMode = true;
-		refreshDungeonCell(player.xLoc, player.yLoc);
-		refreshSideBar(-1, -1, false);
-		message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);
-		message("You have a feeling that you will take 20% as much damage from now on.", false);
-		message("But great power comes at a great price -- specifically, a 90% income tax rate.", false);
+	if (!rogue.easyMode1) {
+		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode)?", false)) {
+			recordKeystroke(EASY_MODE_KEY, false, true);
+			rogue.easyMode1 = true;
+			player.info.displayChar = '&';
+			refreshDungeonCell(player.xLoc, player.yLoc);
+			refreshSideBar(-1, -1, false);
+			message("You have a feeling that you will survive your next death.", false);
+			message("However, you will lose half of your gold on each resurrection.", false);
+		}
+	}
+	else if (!rogue.easyMode2) {
+		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode)?", false)) {
+			recordKeystroke(EASY_MODE_KEY, false, true);
+			message("An ancient and terrible evil burrows into your willing flesh!", true);
+			message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);
+			rogue.easyMode2 = true;
+			message("You have a feeling that you will take 20% as much damage from now on.", false);
+			message("But great power comes at a great price -- specifically, a 80% income tax rate.", false);
+			// it's only 80% income tax instead of the original 90%, because dying is only possible if you were resurrected just before (easy mode 1),
+			// so you just lost half the gold. This is equivalent to 90% tax rate.
+		}
 	} else {
 		message("The evil dissipates, hissing, from the air around you.", false);
 	}

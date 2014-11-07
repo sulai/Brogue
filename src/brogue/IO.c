@@ -261,7 +261,7 @@ short actionMenu(short x, boolean playingBack) {
             buttons[buttonCount].hotkey[0] = AUTOPLAY_KEY;
             buttonCount++;
             
-            if (!rogue.easyMode) {
+            if (!rogue.easyMode2) {
                 if (KEYBOARD_LABELS) {
                     sprintf(buttons[buttonCount].text, "  %s&: %sEasy mode  ",				yellowColorEscape, whiteColorEscape);
                 } else {
@@ -2545,7 +2545,7 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 			if (confirm("Quit this game without saving?", false)) {
 				recordKeystroke(QUIT_KEY, false, false);
 				rogue.quit = true;
-				gameOver("Quit", true);
+				gameOver("Quit", true, RS_DENIED);
 			}
 			break;
 		case SEED_KEY:
@@ -4102,6 +4102,7 @@ short printMonsterInfo(creature *monst, short y, boolean dim, boolean highlight)
 		"Lifespan",
 		"Shielded",
         "Invisible",
+        "Mortal",
 	};
 	
 	if (y >= ROWS - 1) {
