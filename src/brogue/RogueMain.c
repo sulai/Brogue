@@ -392,6 +392,7 @@ void initializeRogue(unsigned long seed) {
 	rogue.autoPlayingLevel = false;
 	rogue.automationActive = false;
 	rogue.justRested = false;
+	rogue.survivedSinceTurn = 0;
 	rogue.easyMode1 = false;
 	rogue.easyMode2 = false;
 	rogue.inWater = false;
@@ -1051,13 +1052,15 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
     
     // check for resurrection
     if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
+    	strcpy(buf, "You die...");
+    	message(buf, true);
     	rogue.gold = rogue.gold / 2;
     	gameOverSurvive();
     	if(resurrection==RS_TELEPORT) {
     		teleport(&player, -1, -1, true);
     	}
-    	player.status[STATUS_MORTAL]=200;
-    	player.maxStatus[STATUS_MORTAL]=200;
+    	player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, 100000/(rogue.playerTurnNumber-rogue.survivedSinceTurn) );
+    	rogue.survivedSinceTurn = rogue.playerTurnNumber;
     	rogue.autoPlayingLevel = false;
     	return;
     }

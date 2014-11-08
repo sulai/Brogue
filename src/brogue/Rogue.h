@@ -2225,6 +2225,7 @@ typedef struct playerCharacter {
 	boolean updatedMapToShoreThisTurn;		// so it's updated no more than once per turn
 	boolean easyMode1;					// enables easy mode 1: survive your next death. each resurrection costs half the gold
 	boolean easyMode2;					// enables easy mode 2: 80% damage bonus at 80% income tax rate (subtracted after game)
+	unsigned long survivedSinceTurn;
 	boolean inWater;					// helps with the blue water filter effect
 	boolean heardCombatThisTurn;		// so you get only one "you hear combat in the distance" per turn
 	boolean creaturesWillFlashThisTurn;	// there are creatures out there that need to flash before the turn ends
