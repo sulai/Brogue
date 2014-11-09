@@ -393,6 +393,7 @@ void initializeRogue(unsigned long seed) {
 	rogue.automationActive = false;
 	rogue.justRested = false;
 	rogue.survivedSinceTurn = 0;
+	rogue.deathCount = 0;
 	rogue.easyMode1 = false;
 	rogue.easyMode2 = false;
 	rogue.inWater = false;
@@ -1041,6 +1042,17 @@ void freeEverything() {
     levels = NULL;
 }
 
+char * killMessage(boolean useCustomPhrasing, char* killedBy) {
+	char buf[200];
+	if (useCustomPhrasing) {
+		sprintf(buf, "%s on depth %i", killedBy, rogue.depthLevel);
+	} else {
+		sprintf(buf, "Killed by a%s %s on depth %i",
+				(isVowelish(killedBy) ? "n" : ""), killedBy, rogue.depthLevel);
+	}
+	return buf;
+}
+
 void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes resurrection) {
     short i, y;
 	char buf[200], highScoreText[200], buf2[200];
@@ -1051,17 +1063,23 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
     item *theItem;
     
     // check for resurrection
+   	rogue.deathCount++;
     if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
     	strcpy(buf, "You die...");
     	message(buf, true);
-    	rogue.gold = rogue.gold / 2;
+    	for(i=9; i>0;i--)
+    		strcpy(rogue.deathMessages[i], rogue.deathMessages[i-1]);
+    	strcpy(rogue.deathMessages[0], killMessage(useCustomPhrasing, killedBy));
     	gameOverSurvive();
     	if(resurrection==RS_TELEPORT) {
     		teleport(&player, -1, -1, true);
     	}
-    	player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, 100000/(rogue.playerTurnNumber-rogue.survivedSinceTurn) );
+    	rogue.gold = rogue.gold / 2;
+    	sprintf(buf, "You survived %lu turns and have been resurrected %lu times.", (rogue.playerTurnNumber-rogue.survivedSinceTurn), rogue.deathCount);
+    	player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)) );
     	rogue.survivedSinceTurn = rogue.playerTurnNumber;
     	rogue.autoPlayingLevel = false;
+    	message(buf, false);
     	return;
     }
 
@@ -1140,12 +1158,7 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
 		funkyFade(dbuf, &black, 0, 30, mapToWindowX(player.xLoc), mapToWindowY(player.yLoc), false);
 	}
 	
-	if (useCustomPhrasing) {
-		sprintf(buf, "%s on depth %i", killedBy, rogue.depthLevel);
-	} else {
-		sprintf(buf, "Killed by a%s %s on depth %i", (isVowelish(killedBy) ? "n" : ""), killedBy,
-				rogue.depthLevel);
-	}
+	strcpy(buf, killMessage(useCustomPhrasing, killedBy));
     theEntry.score = rogue.gold;
 	if (rogue.easyMode2) {
 		theEntry.score /= 5;
@@ -1178,6 +1191,17 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
             }
         }
         
+        if(rogue.easyMode1) {
+			y++; // blank line
+			sprintf(buf, "You have been resurrected %lu times.", rogue.deathCount-1);
+			printString(buf, (COLS - strLenWithoutEscapes(buf)) / 2, y, &gray, &black, 0);
+			y++;
+			for (i = 0; i < rogue.deathCount; i++) {
+				printString(rogue.deathMessages[i], (COLS - strLenWithoutEscapes(rogue.deathMessages[i])) / 2, y, &darkGray, &black, 0);
+				y++;
+			}
+        }
+
 		displayMoreSign();
 	}
 	
@@ -1319,18 +1343,18 @@ void enableEasyMode() {
 	}
 	message("A dark presence surrounds you, whispering promises of stolen power.", true);
 	if (!rogue.easyMode1) {
-		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode)?", false)) {
+		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode I)?", false)) {
 			recordKeystroke(EASY_MODE_KEY, false, true);
 			rogue.easyMode1 = true;
 			player.info.displayChar = '&';
 			refreshDungeonCell(player.xLoc, player.yLoc);
 			refreshSideBar(-1, -1, false);
 			message("You have a feeling that you will survive your next death.", false);
-			message("However, you will lose half of your gold on each resurrection.", false);
+			message("However, you will need to sacrifice half of your gold.", false);
 		}
 	}
 	else if (!rogue.easyMode2) {
-		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode)?", false)) {
+		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode II)?", false)) {
 			recordKeystroke(EASY_MODE_KEY, false, true);
 			message("An ancient and terrible evil burrows into your willing flesh!", true);
 			message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);

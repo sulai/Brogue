@@ -3975,7 +3975,7 @@ void printSeed() {
 	if(!rogue.easyMode1)
 		sprintf(buf, "Dungeon seed #%lu; turn #%lu", rogue.seed, rogue.playerTurnNumber);
 	else
-		sprintf(buf, "Dungeon seed #%lu; turn #%lu, %lu survived", rogue.seed, rogue.playerTurnNumber, rogue.playerTurnNumber-rogue.survivedSinceTurn);
+		sprintf(buf, "Dungeon seed #%lu; turn #%lu; life %lu lasting %lu turns", rogue.seed, rogue.playerTurnNumber, rogue.deathCount+1, rogue.playerTurnNumber-rogue.survivedSinceTurn);
 	message(buf, false);	
 }
 
