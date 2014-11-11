@@ -1065,22 +1065,41 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
     // check for resurrection
    	rogue.deathCount++;
     if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
+
+    	// death
     	strcpy(buf, "You die...");
     	message(buf, true);
-    	for(i=9; i>0;i--)
-    		strcpy(rogue.deathMessages[i], rogue.deathMessages[i-1]);
-    	strcpy(rogue.deathMessages[0], killMessage(useCustomPhrasing, killedBy));
-    	gameOverSurvive();
-    	if(resurrection==RS_TELEPORT) {
-    		teleport(&player, -1, -1, true);
-    	}
-    	rogue.gold = rogue.gold / 2;
-    	sprintf(buf, "You survived %lu turns and have been resurrected %lu times.", (rogue.playerTurnNumber-rogue.survivedSinceTurn), rogue.deathCount);
-    	player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)) );
-    	rogue.survivedSinceTurn = rogue.playerTurnNumber;
-    	rogue.autoPlayingLevel = false;
-    	message(buf, false);
-    	return;
+
+		// death messages
+		for(i=9; i>0;i--)
+			strcpy(rogue.deathMessages[i], rogue.deathMessages[i-1]);
+		strcpy(rogue.deathMessages[0], killMessage(useCustomPhrasing, killedBy));
+
+		// resurrect, teleport and mutate - and take half of the gold
+		gameOverSurvive();
+		if(resurrection==RS_TELEPORT) {
+			teleport(&player, -1, -1, true);
+		}
+		if(player.info.displayChar != '&') {
+			// show & to make easy mode visible...
+			// up to the first resurrection, there is no actual cheating involved.
+			player.info.displayChar = '&';
+			refreshDungeonCell(player.xLoc, player.yLoc);
+			refreshSideBar(-1, -1, false);
+			strcpy(buf, "As a side effect of your resurrection, you mutate into an ampersand!");
+			message(buf, false);
+		}
+		rogue.gold = rogue.gold / 2;
+
+		// calculate duration of mortal status
+		sprintf(buf, "You survived %lu turns and have been resurrected %lu times.", (rogue.playerTurnNumber-rogue.survivedSinceTurn), rogue.deathCount);
+		message(buf, false);
+		player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)) );
+		rogue.survivedSinceTurn = rogue.playerTurnNumber;
+		rogue.autoPlayingLevel = false;
+
+		return;
+
     }
 
     if (player.bookkeepingFlags & MB_IS_DYING) {
@@ -1346,18 +1365,19 @@ void enableEasyMode() {
 		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode I)?", false)) {
 			recordKeystroke(EASY_MODE_KEY, false, true);
 			rogue.easyMode1 = true;
-			player.info.displayChar = '&';
-			refreshDungeonCell(player.xLoc, player.yLoc);
-			refreshSideBar(-1, -1, false);
 			message("You have a feeling that you will survive your next death.", false);
-			message("However, you will need to sacrifice half of your gold.", false);
 		}
 	}
 	else if (!rogue.easyMode2) {
 		if (confirm("Succumb to demonic temptation (i.e. enable Easy Mode II)?", false)) {
 			recordKeystroke(EASY_MODE_KEY, false, true);
 			message("An ancient and terrible evil burrows into your willing flesh!", true);
-			message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);
+			if(player.info.displayChar != '&') {
+				player.info.displayChar = '&';
+				refreshDungeonCell(player.xLoc, player.yLoc);
+				refreshSideBar(-1, -1, false);
+				message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);
+			}
 			rogue.easyMode2 = true;
 			message("You have a feeling that you will take 20% as much damage from now on.", false);
 			message("But great power comes at a great price -- specifically, a 80% income tax rate.", false);
