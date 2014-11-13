@@ -982,6 +982,12 @@ enum monsterTypes {
 	NUMBER_MONSTER_KINDS
 };
 
+enum resurrectionTypes {
+	RS_IN_PLACE,
+	RS_TELEPORT,
+	RS_DENIED,
+};
+
 #define NUMBER_MUTATORS             8
 
 #define	NUMBER_HORDES				168
@@ -1906,6 +1912,7 @@ enum statusEffects {
 	STATUS_LIFESPAN_REMAINING,
 	STATUS_SHIELDED,
     STATUS_INVISIBLE,
+    STATUS_MORTAL,
     STATUS_AGGRAVATING,
 	NUMBER_OF_STATUS_EFFECTS,
 };
@@ -2216,7 +2223,11 @@ typedef struct playerCharacter {
 	boolean updatedAllySafetyMapThisTurn;	// so it's updated no more than once per turn
 	boolean updatedMapToSafeTerrainThisTurn;// so it's updated no more than once per turn
 	boolean updatedMapToShoreThisTurn;		// so it's updated no more than once per turn
-	boolean easyMode;					// enables easy mode
+	boolean easyMode1;					// enables easy mode 1: survive your next death. each resurrection costs half the gold
+	boolean easyMode2;					// enables easy mode 2: 80% damage bonus at 80% income tax rate (subtracted after game)
+	unsigned long survivedSinceTurn;
+	unsigned long deathCount;
+	char deathMessages[10][200];
 	boolean inWater;					// helps with the blue water filter effect
 	boolean heardCombatThisTurn;		// so you get only one "you hear combat in the distance" per turn
 	boolean creaturesWillFlashThisTurn;	// there are creatures out there that need to flash before the turn ends
@@ -2600,7 +2611,7 @@ extern "C" {
 	boolean chooseFile(char *path, char *prompt, char *defaultName, char *suffix);
 	boolean openFile(const char *path);
 	void initializeRogue(unsigned long seed);
-	void gameOver(char *killedBy, boolean useCustomPhrasing);
+	void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes resurrection);
     void victory(boolean superVictory);
 	void enableEasyMode();
 	int rand_range(int lowerBound, int upperBound);

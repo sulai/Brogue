@@ -1160,7 +1160,7 @@ boolean attack(creature *attacker, creature *defender, boolean lungeAttack) {
 				combatMessage(buf, (damage > 0 ? messageColorFromVictim(defender) : &white));
 			}
 			if (&player == defender) {
-				gameOver(attacker->info.monsterName, false);
+				gameOver(attacker->info.monsterName, false, RS_TELEPORT);
 				return true;
 			} else if (&player == attacker
                        && defender->info.monsterID == MK_DRAGON) {
@@ -1490,7 +1490,7 @@ boolean inflictDamage(creature *attacker, creature *defender,
 	}
 	
 	if (defender == &player
-        && rogue.easyMode
+        && rogue.easyMode2
         && damage > 0) {
 		damage = max(1, damage/5);
 	}
@@ -1514,7 +1514,7 @@ boolean inflictDamage(creature *attacker, creature *defender,
         attacker->currentHP += transferenceAmount;
         
         if (attacker == &player && player.currentHP <= 0) {
-            gameOver("Drained by a cursed ring", true);
+            gameOver("Drained by a cursed ring", true, RS_IN_PLACE);
             return false;
         }
     }

@@ -392,7 +392,10 @@ void initializeRogue(unsigned long seed) {
 	rogue.autoPlayingLevel = false;
 	rogue.automationActive = false;
 	rogue.justRested = false;
-	rogue.easyMode = false;
+	rogue.survivedSinceTurn = 0;
+	rogue.deathCount = 0;
+	rogue.easyMode1 = false;
+	rogue.easyMode2 = false;
 	rogue.inWater = false;
 	rogue.creaturesWillFlashThisTurn = false;
 	rogue.updatedSafetyMapThisTurn = false;
@@ -1039,7 +1042,18 @@ void freeEverything() {
     levels = NULL;
 }
 
-void gameOver(char *killedBy, boolean useCustomPhrasing) {
+char * killMessage(boolean useCustomPhrasing, char* killedBy) {
+	char buf[200];
+	if (useCustomPhrasing) {
+		sprintf(buf, "%s on depth %i", killedBy, rogue.depthLevel);
+	} else {
+		sprintf(buf, "Killed by a%s %s on depth %i",
+				(isVowelish(killedBy) ? "n" : ""), killedBy, rogue.depthLevel);
+	}
+	return buf;
+}
+
+void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes resurrection) {
     short i, y;
 	char buf[200], highScoreText[200], buf2[200];
 	rogueHighScoresEntry theEntry;
@@ -1048,6 +1062,46 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 	rogueEvent theEvent;
     item *theItem;
     
+    // check for resurrection
+   	rogue.deathCount++;
+    if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
+
+    	// death
+    	strcpy(buf, "You die...");
+    	message(buf, true);
+
+		// death messages
+		for(i=9; i>0;i--)
+			strcpy(rogue.deathMessages[i], rogue.deathMessages[i-1]);
+		strcpy(rogue.deathMessages[0], killMessage(useCustomPhrasing, killedBy));
+
+		// resurrect, teleport and mutate - and take half of the gold
+		gameOverSurvive();
+		if(resurrection==RS_TELEPORT) {
+			teleport(&player, -1, -1, true);
+		}
+		if(player.info.displayChar != '&') {
+			// show & to make easy mode visible...
+			// up to the first resurrection, there is no actual cheating involved.
+			player.info.displayChar = '&';
+			refreshDungeonCell(player.xLoc, player.yLoc);
+			refreshSideBar(-1, -1, false);
+			strcpy(buf, "As a side effect of your resurrection, you mutate into an ampersand!");
+			message(buf, false);
+		}
+		rogue.gold = rogue.gold / 2;
+
+		// calculate duration of mortal status
+		sprintf(buf, "You survived %lu turns and have been resurrected %lu times.", (rogue.playerTurnNumber-rogue.survivedSinceTurn), rogue.deathCount);
+		message(buf, false);
+		player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)) );
+		rogue.survivedSinceTurn = rogue.playerTurnNumber;
+		rogue.autoPlayingLevel = false;
+
+		return;
+
+    }
+
     if (player.bookkeepingFlags & MB_IS_DYING) {
         // we've already been through this once; let's avoid overkill.
         return;
@@ -1107,12 +1161,7 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
     rogue.creaturesWillFlashThisTurn = false;
 	
 	if (D_IMMORTAL && !rogue.quit) {
-		message("...but then you get better.", false);
-		player.currentHP = player.info.maxHP;
-		if (player.status[STATUS_NUTRITION] < 10) {
-			player.status[STATUS_NUTRITION] = STOMACH_SIZE;
-		}
-		player.bookkeepingFlags &= ~MB_IS_DYING;
+		gameOverSurvive();
 		return;
 	}
 	
@@ -1128,15 +1177,10 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 		funkyFade(dbuf, &black, 0, 30, mapToWindowX(player.xLoc), mapToWindowY(player.yLoc), false);
 	}
 	
-	if (useCustomPhrasing) {
-		sprintf(buf, "%s on depth %i", killedBy, rogue.depthLevel);
-	} else {
-		sprintf(buf, "Killed by a%s %s on depth %i", (isVowelish(killedBy) ? "n" : ""), killedBy,
-				rogue.depthLevel);
-	}
+	strcpy(buf, killMessage(useCustomPhrasing, killedBy));
     theEntry.score = rogue.gold;
-	if (rogue.easyMode) {
-		theEntry.score /= 10;
+	if (rogue.easyMode2) {
+		theEntry.score /= 5;
 	}
     strcpy(highScoreText, buf);
     if (theEntry.score > 0) {
@@ -1166,6 +1210,17 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
             }
         }
         
+        if(rogue.easyMode1) {
+			y++; // blank line
+			sprintf(buf, "You have been resurrected %lu times.", rogue.deathCount-1);
+			printString(buf, (COLS - strLenWithoutEscapes(buf)) / 2, y, &gray, &black, 0);
+			y++;
+			for (i = 0; i < rogue.deathCount; i++) {
+				printString(rogue.deathMessages[i], (COLS - strLenWithoutEscapes(rogue.deathMessages[i])) / 2, y, &darkGray, &black, 0);
+				y++;
+			}
+        }
+
 		displayMoreSign();
 	}
 	
@@ -1178,6 +1233,15 @@ void gameOver(char *killedBy, boolean useCustomPhrasing) {
 	}
 	
 	rogue.gameHasEnded = true;
+}
+
+void gameOverSurvive() {
+	message("...but then you get better.", false);
+	player.currentHP = player.info.maxHP;
+	if (player.status[STATUS_NUTRITION] < 10) {
+		player.status[STATUS_NUTRITION] = STOMACH_SIZE;
+	}
+	player.bookkeepingFlags &= ~MB_IS_DYING;
 }
 
 void victory(boolean superVictory) {
@@ -1269,8 +1333,8 @@ void victory(boolean superVictory) {
 	
 	theEntry.score = totalValue;
 	
-	if (rogue.easyMode) {
-		theEntry.score /= 10;
+	if (rogue.easyMode2) {
+		theEntry.score /= 5;
 	}
 	
 	if (!DEBUGGING && !rogue.playbackMode) {
@@ -1292,7 +1356,7 @@ void victory(boolean superVictory) {
 }
 
 void enableEasyMode() {
-	if (rogue.easyMode) {
+	if (rogue.easyMode2) {
 		message("Alas, all hope of salvation is lost. You shed scalding tears at your plight.", false);
 		return;
 	}
@@ -1301,7 +1365,7 @@ void enableEasyMode() {
 		recordKeystroke(EASY_MODE_KEY, false, true);
 		message("An ancient and terrible evil burrows into your willing flesh!", true);
 		player.info.displayChar = '&';
-		rogue.easyMode = true;
+		rogue.easyMode2 = true;
 		refreshDungeonCell(player.xLoc, player.yLoc);
 		refreshSideBar(-1, -1, false);
 		message("Wracked by spasms, your body contorts into an ALL-POWERFUL AMPERSAND!!!", false);
