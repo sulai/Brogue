@@ -1053,6 +1053,67 @@ char * killMessage(boolean useCustomPhrasing, char* killedBy) {
 	return buf;
 }
 
+void enableResurrection() {
+    if(!rogue.quit && !rogue.easyMode1 && confirm("Enable resurrection mode?", false)) {
+    	recordKeystroke(RESURRECTION_MODE_KEY, false, true);
+    	rogue.easyMode1 = true;
+    }
+}
+
+boolean doResurrection(enum resurrectionTypes resurrection, char useCustomPhrasing, char* killedBy) {
+
+	char buf[200];
+	short i;
+
+	// check for resurrection
+	rogue.deathCount++;
+	if (rogue.easyMode1 && resurrection != RS_DENIED && !rogue.quit
+			&& player.status[STATUS_MORTAL] == 0) {
+
+		// death
+		strcpy(buf, "You die...");
+		message(buf, true);
+
+		// death messages
+		for (i = 9; i > 0; i--)
+			strcpy(rogue.deathMessages[i], rogue.deathMessages[i - 1]);
+		strcpy(rogue.deathMessages[0],
+				killMessage(useCustomPhrasing, killedBy));
+
+		// resurrect, teleport and mutate - and take half of the gold
+		gameOverSurvive();
+		if (resurrection == RS_TELEPORT) {
+			teleport(&player, -1, -1, true);
+		}
+		if (player.info.displayChar != '&') {
+			// show & to make easy mode visible...
+			// up to the first resurrection, there is no actual cheating involved.
+			player.info.displayChar = '&';
+			refreshDungeonCell(player.xLoc, player.yLoc);
+			refreshSideBar(-1, -1, false);
+			strcpy(buf,
+					"As a side effect of your resurrection, you mutate into an ampersand!");
+			message(buf, false);
+		}
+		rogue.gold = rogue.gold / 2;
+
+		// calculate duration of mortal status
+		sprintf(buf,
+				"You survived %lu turns and have been resurrected %lu times.",
+				(rogue.playerTurnNumber - rogue.survivedSinceTurn),
+				rogue.deathCount);
+		message(buf, false);
+		player.status[STATUS_MORTAL] =
+				player.maxStatus[STATUS_MORTAL] =
+						max(0,
+								min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)));
+		rogue.survivedSinceTurn = rogue.playerTurnNumber;
+		rogue.autoPlayingLevel = false;
+		return true;
+	}
+	return false;
+}
+
 void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes resurrection) {
     short i, y;
 	char buf[200], highScoreText[200], buf2[200];
@@ -1061,46 +1122,11 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
 	boolean playback;
 	rogueEvent theEvent;
     item *theItem;
-    
+
     // check for resurrection
-   	rogue.deathCount++;
-    if(rogue.easyMode1 && resurrection!=RS_DENIED && !rogue.quit && player.status[STATUS_MORTAL]==0) {
-
-    	// death
-    	strcpy(buf, "You die...");
-    	message(buf, true);
-
-		// death messages
-		for(i=9; i>0;i--)
-			strcpy(rogue.deathMessages[i], rogue.deathMessages[i-1]);
-		strcpy(rogue.deathMessages[0], killMessage(useCustomPhrasing, killedBy));
-
-		// resurrect, teleport and mutate - and take half of the gold
-		gameOverSurvive();
-		if(resurrection==RS_TELEPORT) {
-			teleport(&player, -1, -1, true);
-		}
-		if(player.info.displayChar != '&') {
-			// show & to make easy mode visible...
-			// up to the first resurrection, there is no actual cheating involved.
-			player.info.displayChar = '&';
-			refreshDungeonCell(player.xLoc, player.yLoc);
-			refreshSideBar(-1, -1, false);
-			strcpy(buf, "As a side effect of your resurrection, you mutate into an ampersand!");
-			message(buf, false);
-		}
-		rogue.gold = rogue.gold / 2;
-
-		// calculate duration of mortal status
-		sprintf(buf, "You survived %lu turns and have been resurrected %lu times.", (rogue.playerTurnNumber-rogue.survivedSinceTurn), rogue.deathCount);
-		message(buf, false);
-		player.status[STATUS_MORTAL]=player.maxStatus[STATUS_MORTAL]=max(0, min(10000,50000*(rogue.deathCount)/(rogue.playerTurnNumber-rogue.survivedSinceTurn)) );
-		rogue.survivedSinceTurn = rogue.playerTurnNumber;
-		rogue.autoPlayingLevel = false;
-
+	if( doResurrection(resurrection, useCustomPhrasing, killedBy) ) {
 		return;
-
-    }
+	}
 
     if (player.bookkeepingFlags & MB_IS_DYING) {
         // we've already been through this once; let's avoid overkill.
@@ -1108,10 +1134,6 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
     } else {
         player.bookkeepingFlags |= MB_IS_DYING;
     }
-	
-	rogue.autoPlayingLevel = false;
-	
-	flushBufferToFile();
 	
 	if (rogue.quit) {
 		if (rogue.playbackMode) {
@@ -1128,7 +1150,7 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
         strcpy(buf, "You die...");
         if (KEYBOARD_LABELS) {
             encodeMessageColor(buf, strlen(buf), &veryDarkGray);
-            strcat(buf, " (press 'i' to view your inventory)");
+            strcat(buf, " (press 'i' to view your inventory or 'r' to resurrect)");
         }
         player.currentHP = 0; // So it shows up empty in the side bar.
         refreshSideBar(-1, -1, false);
@@ -1140,15 +1162,22 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
             if (theEvent.eventType == KEYSTROKE
                 && theEvent.param1 != ACKNOWLEDGE_KEY
                 && theEvent.param1 != ESCAPE_KEY
-                && theEvent.param1 != INVENTORY_KEY) {
+                && theEvent.param1 != INVENTORY_KEY
+                && theEvent.param1 != 'r') {
                 
-                flashTemporaryAlert(" -- Press space or click to continue, or press 'i' to view inventory -- ", 1500);
+                flashTemporaryAlert(" -- Press space or click to continue, 'i' to view inventory or 'r' to resurrect -- ", 1500);
             } else if (theEvent.eventType == KEYSTROKE && theEvent.param1 == INVENTORY_KEY) {
                 for (theItem = packItems->nextItem; theItem != NULL; theItem = theItem->nextItem) {
                     identify(theItem);
                     theItem->flags &= ~ITEM_MAGIC_DETECTED;
                 }
                 displayInventory(ALL_ITEMS, 0, 0, true, false);
+            } else if (theEvent.eventType == KEYSTROKE && theEvent.param1 == 'r') {
+            	enableResurrection();
+            	// TODO: save high score
+            	gameOverSurvive();
+            	//doResurrection(resurrection, useCustomPhrasing, killedBy);
+            	return;
             }
         } while (!(theEvent.eventType == KEYSTROKE && (theEvent.param1 == ACKNOWLEDGE_KEY || theEvent.param1 == ESCAPE_KEY)
                    || theEvent.eventType == MOUSE_UP));
@@ -1158,6 +1187,10 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
 		rogue.playbackMode = playback;
 	}
     
+	rogue.autoPlayingLevel = false;
+
+	flushBufferToFile();
+
     rogue.creaturesWillFlashThisTurn = false;
 	
 	if (D_IMMORTAL && !rogue.quit) {

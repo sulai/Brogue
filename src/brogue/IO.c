@@ -2568,6 +2568,11 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 				enableEasyMode();
 			//}
 			break;
+		case RESURRECTION_MODE_KEY:
+			//if (shiftKey) {
+				enableResurrection();
+			//}
+			break;
 		default:
 			break;
 	}
