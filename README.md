@@ -7,9 +7,7 @@ This is a fork of Brian Walker's "Brogue", a modern roguelike with a strong focu
 This Branch
 ===========
 
-This branch allows to enable resurrection game mode after your death. You are allowed to live on, but with heavy score penalty. Goal is to keep the game challenging, even though easy mode is activated. Resurrection mode makes your character survive death once (teleport to a random position at full health). After that, you need to survive at least a defined number of turns until you are allowed to die again. If you die twice in quick succession... well then you are dead. There is no 80% damage bonus, so this gives a realistic impression of how deadly monsters really are.
-
-Resurrection will make you lose half of the gold you already collected.
+This branch allows to enable resurrection game mode after your death. You are allowed to live on, but with 90% income tax rate, which stacks with the easy mode tax rate. Goal is to keep the game challenging, even though easy mode is activated. Resurrection mode makes your character survive death once (teleport to a random position at full health). After that, you need to survive at least a defined number of turns until you are allowed to die again. If you die twice in quick succession... well then you are dead. There is no 80% damage bonus, so this gives a realistic impression of how deadly monsters really are.
 
 
 Description of the folder layout

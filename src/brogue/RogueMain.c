@@ -1228,7 +1228,7 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
             }
         }
         
-        if(rogue.easyMode1) {
+        if(rogue.resurrectionMode) {
 			y++; // blank line
 			sprintf(buf, "You have been resurrected %lu times.", rogue.deathCount-1);
 			printString(buf, (COLS - strLenWithoutEscapes(buf)) / 2, y, &gray, &black, 0);
