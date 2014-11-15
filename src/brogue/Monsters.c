@@ -2566,7 +2566,7 @@ void monsterCastSpell(creature *caster, creature *target, enum boltType boltInde
     zap(originLoc, targetLoc, &theBolt, false);
     
     if (player.currentHP <= 0) {
-        gameOver(monsterCatalog[caster->info.monsterID].monsterName, false);
+        gameOver(monsterCatalog[caster->info.monsterID].monsterName, false, RS_TELEPORT);
     }
 }
 

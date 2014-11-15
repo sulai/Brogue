@@ -4179,7 +4179,7 @@ boolean updateBolt(bolt *theBolt, creature *caster, short x, short y,
                     if (player.currentHP <= 0) {
                         if (caster == &player) {
                             sprintf(buf, "Killed by a reflected %s", theBolt->name);
-                            gameOver(buf, true);
+                            gameOver(buf, true, RS_IN_PLACE);
                         }
                         terminateBolt = true;
                         return true;
