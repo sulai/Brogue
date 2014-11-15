@@ -1083,10 +1083,15 @@ boolean doResurrection(enum resurrectionTypes resurrection,	char useCustomPhrasi
 			player.info.displayChar = '&';
 			refreshDungeonCell(player.xLoc, player.yLoc);
 			refreshSideBar(-1, -1, false);
-			strcpy(buf, "As a side effect of your resurrection, you mutate into an ampersand! You will pay 90% income tax rate.");
+			strcpy(buf, "As a side effect of your resurrection, you mutate into an ampersand!");
 			message(buf, false);
 		}
 
+		if(rogue.deathCount==1) {
+			rogue.gold=0;
+			strcpy(buf, "You've lost all your gold and will pay 90% income tax rate.");
+			message(buf, false);
+		}
 		// calculate duration of mortal status
 		sprintf(buf,
 				"You survived %lu turns and have been resurrected %lu times.",
