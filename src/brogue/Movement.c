@@ -1943,7 +1943,7 @@ boolean startFighting(enum directions dir, boolean tillDeath) {
         return false;
     }
 	expectedDamage = monst->info.damage.upperBound * monsterDamageAdjustmentAmount(monst);
-	if (rogue.easyMode2) {
+	if (rogue.easyMode) {
 		expectedDamage /= 5;
 	}
 	rogue.blockCombatText = true;

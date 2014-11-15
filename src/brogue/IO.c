@@ -261,7 +261,7 @@ short actionMenu(short x, boolean playingBack) {
             buttons[buttonCount].hotkey[0] = AUTOPLAY_KEY;
             buttonCount++;
             
-            if (!rogue.easyMode2) {
+            if (!rogue.easyMode) {
                 if (KEYBOARD_LABELS) {
                     sprintf(buttons[buttonCount].text, "  %s&: %sEasy mode  ",				yellowColorEscape, whiteColorEscape);
                 } else {
@@ -3972,7 +3972,7 @@ void displayGrid(short **map) {
 
 void printSeed() {
 	char buf[COLS];
-	if(!rogue.easyMode1)
+	if(!rogue.resurrectionMode)
 		sprintf(buf, "Dungeon seed #%lu; turn #%lu", rogue.seed, rogue.playerTurnNumber);
 	else
 		sprintf(buf, "Dungeon seed #%lu; turn #%lu; life %lu lasting %lu turns", rogue.seed, rogue.playerTurnNumber, rogue.deathCount+1, rogue.playerTurnNumber-rogue.survivedSinceTurn);

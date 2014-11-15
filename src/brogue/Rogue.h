@@ -2223,8 +2223,8 @@ typedef struct playerCharacter {
 	boolean updatedAllySafetyMapThisTurn;	// so it's updated no more than once per turn
 	boolean updatedMapToSafeTerrainThisTurn;// so it's updated no more than once per turn
 	boolean updatedMapToShoreThisTurn;		// so it's updated no more than once per turn
-	boolean easyMode1;					// enables easy mode 1: survive your next death. each resurrection costs half the gold
-	boolean easyMode2;					// enables easy mode 2: 80% damage bonus at 80% income tax rate (subtracted after game)
+	boolean resurrectionMode;			// enables resurrection mode
+	boolean easyMode;					// enables easy mode
 	unsigned long survivedSinceTurn;
 	unsigned long deathCount;
 	char deathMessages[10][200];
