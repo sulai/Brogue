@@ -209,7 +209,7 @@ void flushBufferToFile() {
 	short i;
 	FILE *recordFile;
 	
-	if (rogue.playbackMode || rogue.resurrectionMode) {
+	if (rogue.playbackMode) {
 		return;
 	}
 	

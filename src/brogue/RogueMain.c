@@ -1090,7 +1090,7 @@ boolean doResurrection(enum resurrectionTypes resurrection,	char useCustomPhrasi
 		if(rogue.deathCount==1) {
 			rogue.gold=0;
 			strcpy(buf, "You've lost all your gold and will pay 90% income tax rate.");
-			message(buf, false);
+			message(buf, true);
 		}
 		// calculate duration of mortal status
 		sprintf(buf,
@@ -1119,6 +1119,8 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
 
     rogue.deathCount++;
     // check for resurrection
+    if(!rogue.quit && rogue.playbackMode && recordingLocation<lengthOfPlaybackFile && !rogue.resurrectionMode)
+    	rogue.resurrectionMode=true;
 	if(doResurrection(resurrection, useCustomPhrasing, killedBy))
 		return;
 
@@ -1251,17 +1253,16 @@ void gameOver(char *killedBy, boolean useCustomPhrasing, enum resurrectionTypes 
 		if (saveHighScore(theEntry)) {
 			printHighScores(true);
 		}
-		if(!rogue.resurrectionMode) {
-			blackOutScreen();
-			saveRecording();
-		}
 		if(!rogue.quit && !rogue.resurrectionMode && confirm("Do you want to resurrect?", false)) {
 			rogue.resurrectionMode = true;
 			rogue.highScoreSaved = false;
+			blackOutScreen();
 			doResurrection(resurrection, useCustomPhrasing, killedBy);
 			displayLevel();
 			return;
 		}
+		blackOutScreen();
+		saveRecording();
 	}
 	
 	rogue.gameHasEnded = true;
