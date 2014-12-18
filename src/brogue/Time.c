@@ -2341,7 +2341,6 @@ void playerTurnEnded() {
 								playerCanDirectlySee(monst->xLoc, monst->yLoc) ? "see" : "sense",
 								(isVowelish(buf2) ? "n" : ""),
 								buf2);
-						colorFlash(&magicMapFlashColor, 0, 0, 6, 4, monst->xLoc, monst->yLoc);
 						if (rogue.cautiousMode) {
 							strcat(buf, ".");
 							message(buf, true);

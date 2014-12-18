@@ -1588,9 +1588,6 @@ boolean awareOfTarget(creature *observer, creature *target) {
 	} else if (perceivedDistance <= awareness) {
         // within range but currently unaware
         retval = rand_percent(25);
-        if (retval && !(observer->creatureState & (MONSTER_ALLY | MONSTER_FLEEING))) {
-          colorFlash(&redFlashColor, 0, 0, 5, 4, observer->xLoc, observer->yLoc);
-        }
     } else {
         retval = false;
     }
