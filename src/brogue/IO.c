@@ -2545,7 +2545,7 @@ void executeKeystroke(signed long keystroke, boolean controlKey, boolean shiftKe
 			if (confirm("Quit this game without saving?", false)) {
 				recordKeystroke(QUIT_KEY, false, false);
 				rogue.quit = true;
-				gameOver("Quit", true);
+				gameOver("Quit", true, RS_DENIED);
 			}
 			break;
 		case SEED_KEY:
@@ -3972,7 +3972,10 @@ void displayGrid(short **map) {
 
 void printSeed() {
 	char buf[COLS];
-	sprintf(buf, "Dungeon seed #%lu; turn #%lu", rogue.seed, rogue.playerTurnNumber);
+	if(!rogue.resurrectionMode)
+		sprintf(buf, "Dungeon seed #%lu; turn #%lu", rogue.seed, rogue.playerTurnNumber);
+	else
+		sprintf(buf, "Dungeon seed #%lu; turn #%lu; life %lu lasting %lu turns", rogue.seed, rogue.playerTurnNumber, rogue.deathCount+1, rogue.playerTurnNumber-rogue.survivedSinceTurn);
 	message(buf, false);	
 }
 
@@ -4102,6 +4105,7 @@ short printMonsterInfo(creature *monst, short y, boolean dim, boolean highlight)
 		"Lifespan",
 		"Shielded",
         "Invisible",
+        "Mortal",
 	};
 	
 	if (y >= ROWS - 1) {
