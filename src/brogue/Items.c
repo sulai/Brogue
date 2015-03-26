@@ -1780,8 +1780,9 @@ void itemDetails(char *buf, item *theItem) {
 		"[multiplicity]", // never used
 		"the enemy will be slowed",
 		"the enemy will be confused",
-        "the enemy will be flung",
+		"the enemy will be flung",
 		"[slaying]", // never used
+		"the enemy's strength will be weakened",
 		"the enemy will be healed",
 		"the enemy will be cloned"
 	};
@@ -2135,6 +2136,12 @@ void itemDetails(char *buf, item *theItem) {
 										strcat(buf, buf2);
 										nextLevelState = weaponForceDistance((float) (enchant + enchantIncrement(theItem)));
 										break;
+									case W_ENERVATION:
+										sprintf(buf2, " by %i. ",
+												weaponWeaknessCount(enchant));
+										strcat(buf, buf2);
+										nextLevelState = weaponWeaknessCount((float) (enchant + enchantIncrement(theItem)));
+										break;
 									case W_MERCY:
 										strcpy(buf2, " by 50% of its maximum health. ");
 										strcat(buf, buf2);
@@ -2155,7 +2162,11 @@ void itemDetails(char *buf, item *theItem) {
                                         if (theItem->enchant2 == W_FORCE) {
                                             sprintf(buf2, " and the distance will increase to %i.)",
                                                     nextLevelState);
-                                        } else {
+                                        }
+                                        else if (theItem->enchant2 == W_ENERVATION) {
+                                            sprintf(buf2, " and the enemy will be weakened by %i.)",
+                                                    nextLevelState);
+                                        }else {
                                             sprintf(buf2, " and the duration will increase to %i turns.)",
                                                     nextLevelState);
                                         }
@@ -3588,9 +3599,9 @@ short monsterDefenseAdjusted(const creature *monst) {
 }
 
 // Adds one to the creature's weakness, sets the weakness status duration to maxDuration.
-void weaken(creature *monst, short maxDuration) {
+void weaken(creature *monst, short maxDuration, short amount) {
     if (monst->weaknessAmount < 10) {
-        monst->weaknessAmount++;
+        monst->weaknessAmount+=amount;
     }
 	monst->status[STATUS_WEAKENED] = max(monst->status[STATUS_WEAKENED], maxDuration);
 	monst->maxStatus[STATUS_WEAKENED] = max(monst->maxStatus[STATUS_WEAKENED], maxDuration);
@@ -7425,8 +7436,9 @@ unsigned long itemValue(item *theItem) {
 		800,	//W_MULTIPLICITY,
 		700,	//W_SLOWING,
 		750,	//W_CONFUSION,
-        850,    //W_FORCE,
+		850,    //W_FORCE,
 		500,	//W_SLAYING,
+		800,	//W_ENERVATION,
 		-1000,	//W_MERCY,
 		-1000,	//W_PLENTY,
 	};
@@ -7437,11 +7449,11 @@ unsigned long itemValue(item *theItem) {
 		900,	//A_REPRISAL,
 		500,	//A_IMMUNITY,
 		900,	//A_REFLECTION,
-        750,    //A_RESPIRATION
-        500,    //A_DAMPENING
+		750,    //A_RESPIRATION
+		500,    //A_DAMPENING
 		-1000,	//A_BURDEN,
 		-1000,	//A_VULNERABILITY,
-        -1000,  //A_IMMOLATION,
+		-1000,  //A_IMMOLATION,
 	};
 	
 	signed long value;

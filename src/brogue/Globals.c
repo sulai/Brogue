@@ -2346,8 +2346,9 @@ const char weaponRunicNames[NUMBER_WEAPON_RUNIC_KINDS][30] = {
 	"multiplicity",
 	"slowing",
 	"confusion",
-    "force",
+	"force",
 	"slaying",
+	"enervation",
 	"mercy",
 	"plenty"
 };
@@ -2359,11 +2360,11 @@ const char armorRunicNames[NUMBER_ARMOR_ENCHANT_KINDS][30] = {
 	"reprisal",
 	"immunity",
 	"reflection",
-    "respiration",
-    "dampening",
+	"respiration",
+	"dampening",
 	"burden",
 	"vulnerability",
-    "immolation",
+	"immolation",
 };
 
 itemTable scrollTable[NUMBER_SCROLL_KINDS] = {
